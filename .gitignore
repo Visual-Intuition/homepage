@@ -1,0 +1,33 @@
+# Scratch - temporary work (contents ignored, directory kept)
+scratch/*
+!scratch/.gitkeep
+
+# Resources - external reference materials (contents ignored, directory kept)
+resources/*
+!resources/.gitkeep
+
+# Data - derived/precomputed data (shared via DVC)
+data/**
+!data/**/
+!data/**/*.dvc
+!data/.gitkeep
+
+# Environment & secrets
+.env
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Add language/framework-specific ignores below
+node_modules/
+.next/
+.vercel
