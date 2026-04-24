@@ -20,18 +20,6 @@ export default function TraceAnimation() {
     let w: number;
     let h: number;
 
-    function resize() {
-      const rect = canvas!.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      w = rect.width;
-      h = rect.height;
-      canvas!.width = w * dpr;
-      canvas!.height = h * dpr;
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resize();
-    window.addEventListener("resize", resize);
-
     const path: Point[] = [];
     const totalPoints = 600;
     let leaderIndex = 0;
@@ -44,14 +32,15 @@ export default function TraceAnimation() {
 
       const cx = w / 2;
       const cy = h / 2;
-      const rx = w * 0.45;
+      const hScale = 0.3 + 0.15 * Math.min(w / 1200, 1);
+      const rx = w * hScale;
       const ry = h * 0.35;
+      const noiseScale = Math.min(w / 1200, 1);
 
       for (let i = 0; i < totalPoints; i++) {
         const t = i / totalPoints;
         const a = t * Math.PI * 2;
 
-        // all modulation frequencies are integers so they complete full cycles over 2*PI
         const drift = Math.sin(3 * a) * rx * 0.15;
         const wobble = Math.cos(2 * a) * ry * 0.1;
         const rScale = 0.8 + Math.sin(a) * 0.2;
@@ -62,15 +51,26 @@ export default function TraceAnimation() {
           y: cy + Math.sin(a) * (ry + wobble) * yScale,
         });
 
-        // noise also uses integer harmonics of 2*PI for seamless loop
-        const amp = 10;
+        const amp = 10 * noiseScale;
         followerNoise.push({
           x: Math.sin(3 * a + 1.7) * amp + Math.sin(7 * a + 0.3) * amp * 0.4,
           y: Math.cos(2 * a + 3.1) * amp + Math.cos(5 * a + 2.1) * amp * 0.4,
         });
       }
     }
-    generatePath();
+
+    function resize() {
+      const rect = canvas!.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width;
+      h = rect.height;
+      canvas!.width = w * dpr;
+      canvas!.height = h * dpr;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      generatePath();
+    }
+    resize();
+    window.addEventListener("resize", resize);
 
     const speed = 1.5;
     const trailLen = 120;
