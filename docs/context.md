@@ -13,7 +13,7 @@ Visitors to the Visual Intuition website — potential customers, investors, par
 - **Framework**: Next.js (App Router, TypeScript)
 - **Styling**: Tailwind CSS
 - **Font**: Inter (via next/font/google)
-- **Deployment**: TBD
+- **Deployment**: Vercel (personal `nano6626` account, Hobby tier) — manual `vercel --prod` from `src/`. See `docs/runbooks/deployment.md`.
 
 ## Architecture
 
