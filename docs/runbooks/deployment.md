@@ -42,7 +42,12 @@ After the first deploy, connect `visualintuition.ai`:
 | A | `@` | `76.76.21.21` | DNS only (gray cloud) |
 | CNAME | `www` | `cname.vercel-dns.com` | DNS only (gray cloud) |
 
-**Cloudflare proxy must be OFF** (gray cloud, not orange) — Vercel handles SSL and caching.
+**Cloudflare proxy must be OFF** (gray cloud / "DNS only", not orange) — Vercel handles SSL and caching. Confirmed set to DNS-only for both `@` and `www` on 2026-04-24; verify with `curl -I https://visualintuition.ai` → response should show `Server: Vercel` and no `CF-RAY` / `cf-cache-status` headers.
+
+Why gray, not orange:
+- **SSL renewal.** Vercel renews Let's Encrypt certs via HTTP-01 challenge. Cloudflare proxy intercepts the challenge path, so renewal fails silently and the cert eventually expires (~60 days).
+- **Cache coherence.** Cloudflare proxy adds a second edge cache on top of Vercel's. After a deploy, Cloudflare keeps serving stale bytes until its TTL expires (observed `Age: 29660` post-deploy during the migration). DNS-only means only Vercel caches, so deploys are live immediately.
+- **No benefit for this site.** Vercel already runs a global anycast CDN. A second proxy layer adds latency and failure surface without gain for a static Next.js page.
 
 3. Wait a few minutes for DNS propagation, then verify in Vercel dashboard that the domain shows a green checkmark.
 
