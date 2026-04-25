@@ -10,7 +10,7 @@ export default function Home() {
       </h1>
       <TraceAnimation />
       <p className="absolute bottom-8 z-10 px-4 text-center text-xs tracking-wide text-neutral-500">
-        Contact: claireswadling771@gmail.com, ishaanchandok@gmail.com
+        Contact: claire@visualintuition.ai, ishaanchandok@gmail.com
       </p>
     </div>
   );

@@ -57,7 +57,7 @@ Why gray, not orange:
 - **Vercel project name**: `visual-intuition-homepage`
 - **Domain**: `visualintuition.ai` / `www.visualintuition.ai`
 - **DNS provider**: Cloudflare (registrar + DNS; proxy must be OFF / gray cloud)
-- **GitHub**: https://github.com/Visual-Intuition/homepage (not connected to Vercel auto-deploy — deploys are manual via CLI)
+- **GitHub**: https://github.com/Visual-Intuition/homepage (connected to Vercel — pushes to `main` auto-deploy)
 
 Previously hosted on the `prior-computers` Vercel team as a temporary arrangement. Migrated to the `nano6626` personal account on 2026-04-24. A future Visual Intuition Vercel Team can take over by running `vercel domains rm` from `nano6626` and `vercel domains add` from the new team.
 
