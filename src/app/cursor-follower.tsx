@@ -45,8 +45,8 @@ export default function CursorFollower() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerleave", onLeave);
 
-    const lag = 0.12;
-    const noiseAmp = 18;
+    const lag = 0.035;
+    const noiseAmp = 22;
     const fx1 = 0.00045;
     const fx2 = 0.00081;
     const fy1 = 0.00057;
@@ -55,6 +55,9 @@ export default function CursorFollower() {
     const px2 = 4.2;
     const py1 = 0.6;
     const py2 = 2.9;
+
+    const trailLen = 60;
+    const trail: { x: number; y: number }[] = [];
 
     let animationId: number;
     let opacity = 0;
@@ -66,7 +69,7 @@ export default function CursorFollower() {
       dotY += (targetY - dotY) * lag;
 
       const targetOpacity = visible ? 1 : 0;
-      opacity += (targetOpacity - opacity) * 0.08;
+      opacity += (targetOpacity - opacity) * 0.05;
 
       const nx =
         Math.sin(t * fx1 + px1) * noiseAmp +
@@ -78,14 +81,32 @@ export default function CursorFollower() {
       const x = dotX + nx;
       const y = dotY + ny;
 
-      if (opacity > 0.01) {
+      trail.push({ x, y });
+      if (trail.length > trailLen) trail.shift();
+
+      if (opacity > 0.01 && trail.length > 1) {
+        // trail line
+        for (let i = 1; i < trail.length; i++) {
+          const a = i / trail.length;
+          const p0 = trail[i - 1];
+          const p1 = trail[i];
+          ctx!.beginPath();
+          ctx!.moveTo(p0.x, p0.y);
+          ctx!.lineTo(p1.x, p1.y);
+          ctx!.strokeStyle = `rgba(178, 130, 255, ${a * 0.45 * opacity})`;
+          ctx!.lineWidth = 1 + a * 1.2;
+          ctx!.lineCap = "round";
+          ctx!.stroke();
+        }
+
+        // head: glow + halo + core
         ctx!.beginPath();
-        ctx!.arc(x, y, 22, 0, Math.PI * 2);
+        ctx!.arc(x, y, 26, 0, Math.PI * 2);
         ctx!.fillStyle = `rgba(168, 120, 255, ${0.08 * opacity})`;
         ctx!.fill();
 
         ctx!.beginPath();
-        ctx!.arc(x, y, 12, 0, Math.PI * 2);
+        ctx!.arc(x, y, 13, 0, Math.PI * 2);
         ctx!.fillStyle = `rgba(178, 130, 255, ${0.18 * opacity})`;
         ctx!.fill();
 
