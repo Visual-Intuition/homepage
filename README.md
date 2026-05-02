@@ -20,9 +20,4 @@ Open http://localhost:3000.
 
 ## Deploy
 
-```bash
-cd src
-vercel --prod
-```
-
-Live at https://visualintuition.ai.
+Pushes to `main` auto-deploy via Vercel (project lives on the `nano6626` account). Live at https://visualintuition.ai.

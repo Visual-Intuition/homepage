@@ -45,7 +45,7 @@ export default function CursorFollower() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerleave", onLeave);
 
-    const lag = 0.035;
+    const lag = 0.012;
     const noiseAmp = 22;
     const fx1 = 0.00045;
     const fx2 = 0.00081;
@@ -56,7 +56,7 @@ export default function CursorFollower() {
     const py1 = 0.6;
     const py2 = 2.9;
 
-    const trailLen = 60;
+    const trailLen = 120;
     const trail: { x: number; y: number }[] = [];
 
     let animationId: number;
