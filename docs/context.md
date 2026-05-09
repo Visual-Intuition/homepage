@@ -17,11 +17,15 @@ Visitors to the Visual Intuition website — potential customers, investors, par
 
 ## Architecture
 
-Single-page Next.js app in `src/`. Key files:
+Next.js app in `src/`. Key files:
 
 - `src/app/layout.tsx` — root layout, font, metadata
 - `src/app/page.tsx` — landing page (server component)
+- `src/app/title.tsx` — heading client component; the `o` in "Intuition" navigates to `/demo` after 3s of hover
 - `src/app/floating-particles.tsx` — canvas-based particle animation (client component)
+- `src/app/cursor-follower.tsx` — purple cursor-follower dot with lag and trail (client component)
+- `src/app/trace-animation.tsx` — annotation-trace animation
+- `src/app/demo/page.tsx` — placeholder destination for the `o`-hover navigation
 - `src/app/globals.css` — global styles, black background
 
 ## Key Decisions
