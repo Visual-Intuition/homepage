@@ -45,7 +45,7 @@ export default function CursorFollower() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerleave", onLeave);
 
-    const lag = 0.03;
+    const lag = 0.02;
     const noiseAmp = 22;
     const fx1 = 0.00045;
     const fx2 = 0.00081;
