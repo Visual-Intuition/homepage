@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colored Dot Tracking - Human Annotation</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0a0a0c;
+      --bg-panel: #14151a;
+      --bg-elevated: #1c1d24;
+      --border: #2a2b33;
+      --text-primary: #e8e9ed;
+      --text-secondary: #8b8d97;
+      --accent-cyan: #00d4aa;
+      --accent-green: #4ade80;
+      --accent-red: #f87171;
+      --accent-purple: #a78bfa;
+      --accent-blue: #60a5fa;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 16px;
+      max-width: 600px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .header .task-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .instructions {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      max-width: 600px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    .instructions strong {
+      color: var(--text-primary);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .main-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-panel);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      align-self: center;
+    }
+
+    #canvas {
+      display: block;
+      cursor: crosshair;
+    }
+
+    .controls {
+      width: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .control-section {
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-secondary);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 10px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-elevated);
+      border-color: var(--text-secondary);
+    }
+
+    .nav-btn.plus-z {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+
+    .nav-btn.plus-z:hover {
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .nav-btn.minus-z {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+
+    .nav-btn.minus-z:hover {
+      background: rgba(248, 113, 113, 0.1);
+    }
+
+    .action-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      width: 100%;
+    }
+
+    .action-btn.mip {
+      background: var(--bg-panel);
+      color: var(--accent-purple);
+      border-color: var(--accent-purple);
+    }
+
+    .action-btn.mip:hover {
+      background: rgba(167, 139, 250, 0.1);
+    }
+
+    .action-btn.mip.active {
+      background: var(--accent-red);
+      color: var(--bg-dark);
+      border-color: var(--accent-red);
+    }
+
+    .action-btn.undo {
+      background: var(--bg-panel);
+      color: var(--accent-red);
+      border-color: var(--accent-red);
+    }
+
+    .action-btn.undo:hover {
+      background: rgba(248, 113, 113, 0.1);
+    }
+
+    .action-btn.done {
+      background: var(--accent-cyan);
+      color: var(--bg-dark);
+      border-color: var(--accent-cyan);
+    }
+
+    .action-btn.done:hover {
+      filter: brightness(1.1);
+    }
+
+    .nav-btn:disabled,
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .status-bar {
+      padding: 12px 16px;
+      background: var(--bg-panel);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .status-item span {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Annotator ID input */
+    .annotator-section {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .annotator-section label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .annotator-section input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: var(--text-primary);
+      width: 200px;
+    }
+
+    /* Result display */
+    .result-panel {
+      display: none;
+      background: var(--bg-panel);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .result-panel h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--accent-cyan);
+    }
+
+    .result-panel pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      padding: 12px;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+      color: var(--text-secondary);
+    }
+
+    .result-panel .download-btn {
+      margin-top: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 20px;
+      background: var(--accent-cyan);
+      color: var(--bg-dark);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .result-panel .download-btn:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Colored Dot Tracking - Annotation Task</h1>
+    <div class="task-info" id="taskInfo">Task ID: --</div>
+  </div>
+
+  <div class="instructions">
+    <strong>Instructions:</strong> You are looking at colored dots in a 3D volume viewed one z-slice at a time.
+    The dots are colored from <strong style="color:#0000ff">blue</strong> (first) to <strong style="color:#ff0000">red</strong> (last) using a jet colormap.
+    Click each dot <strong>in color order</strong> (blue â†’ cyan â†’ green â†’ yellow â†’ red), navigating z-slices to find each one.
+    Use <strong>MIP</strong> to see all dots at once (you can't place markers in MIP mode).
+    Click <strong>Done</strong> when finished.
+  </div>
+
+  <div class="annotator-section">
+    <label>Annotator ID:</label>
+    <input type="text" id="annotatorId" placeholder="e.g. your_name" />
+  </div>
+
+  <div class="container">
+    <div class="main-area">
+      <div class="canvas-wrapper">
+        <canvas id="canvas" width="256" height="256"></canvas>
+      </div>
+      <div class="controls">
+        <div class="control-section">
+          <div class="section-label">Z Navigation</div>
+          <div class="nav-buttons">
+            <button class="nav-btn plus-z" id="plusZ">+z 1</button>
+            <button class="nav-btn minus-z" id="minusZ">-z 1</button>
+          </div>
+        </div>
+        <div class="control-section">
+          <div class="section-label">View Mode</div>
+          <button class="action-btn mip" id="mip">MIP</button>
+        </div>
+        <button class="action-btn undo" id="undo">Undo</button>
+        <button class="action-btn done" id="done">Done</button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-item">Z: <span id="zValue">0</span></div>
+      <div class="status-item">Points: <span id="ptsValue">0</span></div>
+    </div>
+  </div>
+
+  <div class="result-panel" id="resultPanel">
+    <h3>Submitting your annotation...</h3>
+    <p style="font-size:13px; color: var(--text-secondary);">
+      One moment. You'll be redirected to your results shortly.
+    </p>
+  </div>
+
+  <script>
+    // =====================================================
+    // Task data - injected by generation script
+    // =====================================================
+    let taskData = null;
+    let taskMetadata = null;
+
+    // =====================================================
+    // State
+    // =====================================================
+    let state = {
+      z: 0,
+      mip: false,
+      markers: [],
+      numSlices: 16,
+      lastAction: null,
+      canUndo: false,
+      isComplete: false
+    };
+
+    const CANVAS_SIZE = 256;
+
+    // =====================================================
+    // Click history recording
+    // =====================================================
+    let clickHistory = [];
+    let sessionStartTime = null;
+
+    function recordAction(actionType, actionCoords, extraFields) {
+      if (!sessionStartTime) {
+        sessionStartTime = Date.now();
+      }
+      const entry = {
+        z: state.z,
+        mip: state.mip,
+        n_pts: state.markers.length,
+        action: actionCoords,
+        action_type: actionType,
+        timestamp_ms: Date.now() - sessionStartTime,
+        ...(extraFields || {})
+      };
+      clickHistory.push(entry);
+    }
+
+    // =====================================================
+    // Matrix Utilities (same as original template)
+    // =====================================================
+
+    function invertMatrix2x2(m) {
+      const a = m[0][0], b = m[0][1];
+      const c = m[1][0], d = m[1][1];
+      const det = a * d - b * c;
+      if (Math.abs(det) < 1e-10) {
+        return [[1 / 4, 0], [0, 1 / 4]];
+      }
+      return [
+        [d / det, -b / det],
+        [-c / det, a / det]
+      ];
+    }
+
+    // =====================================================
+    // Rendering Functions (same as original template)
+    // =====================================================
+
+    function renderSlice(ctx, sample, zMin, zMax, xySize, bgColor) {
+      const imageData = ctx.createImageData(xySize, xySize);
+      const data = imageData.data;
+      const intensityR = new Float32Array(xySize * xySize);
+      const intensityG = new Float32Array(xySize * xySize);
+      const intensityB = new Float32Array(xySize * xySize);
+
+      for (const pt of sample.points) {
+        if (pt.z < zMin || pt.z >= zMax) continue;
+        const px = pt.x * xySize;
+        const py = pt.y * xySize;
+        const cov2d = [
+          [pt.covariance[0][0] * xySize * xySize, pt.covariance[0][1] * xySize * xySize],
+          [pt.covariance[1][0] * xySize * xySize, pt.covariance[1][1] * xySize * xySize]
+        ];
+        const covInv = invertMatrix2x2(cov2d);
+        const [r, g, b] = pt.color;
+        const maxSigma = Math.max(
+          Math.sqrt(Math.abs(cov2d[0][0])),
+          Math.sqrt(Math.abs(cov2d[1][1]))
+        );
+        const radius = Math.min(xySize, maxSigma * 4);
+        const xStart = Math.max(0, Math.floor(px - radius));
+        const xEnd = Math.min(xySize, Math.ceil(px + radius));
+        const yStart = Math.max(0, Math.floor(py - radius));
+        const yEnd = Math.min(xySize, Math.ceil(py + radius));
+
+        for (let y = yStart; y < yEnd; y++) {
+          for (let x = xStart; x < xEnd; x++) {
+            const dx = x - px;
+            const dy = y - py;
+            const dSq = covInv[0][0] * dx * dx +
+                        2 * covInv[0][1] * dx * dy +
+                        covInv[1][1] * dy * dy;
+            const intensity = Math.exp(-0.5 * dSq);
+            const idx = y * xySize + x;
+            intensityR[idx] = Math.max(intensityR[idx], intensity * r);
+            intensityG[idx] = Math.max(intensityG[idx], intensity * g);
+            intensityB[idx] = Math.max(intensityB[idx], intensity * b);
+          }
+        }
+      }
+
+      for (let i = 0; i < xySize * xySize; i++) {
+        const alpha = Math.max(intensityR[i], intensityG[i], intensityB[i]);
+        const finalR = intensityR[i] + bgColor * (1 - alpha);
+        const finalG = intensityG[i] + bgColor * (1 - alpha);
+        const finalB = intensityB[i] + bgColor * (1 - alpha);
+        data[i * 4 + 0] = Math.min(255, Math.round(finalR * 255));
+        data[i * 4 + 1] = Math.min(255, Math.round(finalG * 255));
+        data[i * 4 + 2] = Math.min(255, Math.round(finalB * 255));
+        data[i * 4 + 3] = 255;
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    function renderMIP(ctx, sample, xySize, bgColor) {
+      const imageData = ctx.createImageData(xySize, xySize);
+      const data = imageData.data;
+      const intensityR = new Float32Array(xySize * xySize);
+      const intensityG = new Float32Array(xySize * xySize);
+      const intensityB = new Float32Array(xySize * xySize);
+
+      for (const pt of sample.points) {
+        const px = pt.x * xySize;
+        const py = pt.y * xySize;
+        const cov2d = [
+          [pt.covariance[0][0] * xySize * xySize, pt.covariance[0][1] * xySize * xySize],
+          [pt.covariance[1][0] * xySize * xySize, pt.covariance[1][1] * xySize * xySize]
+        ];
+        const covInv = invertMatrix2x2(cov2d);
+        const [r, g, b] = pt.color;
+        const maxSigma = Math.max(
+          Math.sqrt(Math.abs(cov2d[0][0])),
+          Math.sqrt(Math.abs(cov2d[1][1]))
+        );
+        const radius = Math.min(xySize, maxSigma * 4);
+        const xStart = Math.max(0, Math.floor(px - radius));
+        const xEnd = Math.min(xySize, Math.ceil(px + radius));
+        const yStart = Math.max(0, Math.floor(py - radius));
+        const yEnd = Math.min(xySize, Math.ceil(py + radius));
+
+        for (let y = yStart; y < yEnd; y++) {
+          for (let x = xStart; x < xEnd; x++) {
+            const dx = x - px;
+            const dy = y - py;
+            const dSq = covInv[0][0] * dx * dx +
+                        2 * covInv[0][1] * dx * dy +
+                        covInv[1][1] * dy * dy;
+            const intensity = Math.exp(-0.5 * dSq);
+            const idx = y * xySize + x;
+            intensityR[idx] = Math.max(intensityR[idx], intensity * r);
+            intensityG[idx] = Math.max(intensityG[idx], intensity * g);
+            intensityB[idx] = Math.max(intensityB[idx], intensity * b);
+          }
+        }
+      }
+
+      for (let i = 0; i < xySize * xySize; i++) {
+        const alpha = Math.max(intensityR[i], intensityG[i], intensityB[i]);
+        const finalR = intensityR[i] + bgColor * (1 - alpha);
+        const finalG = intensityG[i] + bgColor * (1 - alpha);
+        const finalB = intensityB[i] + bgColor * (1 - alpha);
+        data[i * 4 + 0] = Math.min(255, Math.round(finalR * 255));
+        data[i * 4 + 1] = Math.min(255, Math.round(finalG * 255));
+        data[i * 4 + 2] = Math.min(255, Math.round(finalB * 255));
+        data[i * 4 + 3] = 255;
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    function getMarkerColor(bgColor) {
+      return bgColor < 0.5 ? [255, 255, 255] : [0, 0, 0];
+    }
+
+    function drawMarkers(ctx, markers, currentZ, bgColor, numSlices) {
+      const markerColor = getMarkerColor(bgColor);
+      const colorStr = `rgb(${markerColor[0]}, ${markerColor[1]}, ${markerColor[2]})`;
+
+      for (const [mx, my, mz] of markers) {
+        const px = mx * CANVAS_SIZE;
+        const py = my * CANVAS_SIZE;
+        const zDiff = Math.abs(currentZ - mz);
+        let radius;
+        let filled = false;
+        if (zDiff === 0) {
+          radius = 8;
+        } else if (zDiff === 1) {
+          radius = 4;
+        } else {
+          radius = 2;
+          filled = true;
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        if (filled) {
+          ctx.fillStyle = colorStr;
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = colorStr;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+    }
+
+    function drawMarkersOnMIP(ctx, markers, bgColor) {
+      const markerColor = getMarkerColor(bgColor);
+      const colorStr = `rgb(${markerColor[0]}, ${markerColor[1]}, ${markerColor[2]})`;
+
+      if (markers.length >= 2) {
+        ctx.strokeStyle = colorStr;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(markers[0][0] * CANVAS_SIZE, markers[0][1] * CANVAS_SIZE);
+        for (let i = 1; i < markers.length; i++) {
+          ctx.lineTo(markers[i][0] * CANVAS_SIZE, markers[i][1] * CANVAS_SIZE);
+        }
+        ctx.stroke();
+      }
+
+      for (const [mx, my, mz] of markers) {
+        const px = mx * CANVAS_SIZE;
+        const py = my * CANVAS_SIZE;
+        ctx.beginPath();
+        ctx.arc(px, py, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = colorStr;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    // =====================================================
+    // Main Render Function
+    // =====================================================
+
+    function render() {
+      if (!taskData) return;
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const bgColor = taskData.bg_color || 0.3;
+
+      if (state.mip) {
+        renderMIP(ctx, taskData, CANVAS_SIZE, bgColor);
+        drawMarkersOnMIP(ctx, state.markers, bgColor);
+      } else {
+        const zMin = state.z / state.numSlices;
+        const zMax = (state.z + 1) / state.numSlices;
+        renderSlice(ctx, taskData, zMin, zMax, CANVAS_SIZE, bgColor);
+        drawMarkers(ctx, state.markers, state.z, bgColor, state.numSlices);
+      }
+
+      document.getElementById('zValue').textContent = state.z;
+      document.getElementById('ptsValue').textContent = state.markers.length;
+      document.getElementById('mip').classList.toggle('active', state.mip);
+      updateButtonStates();
+    }
+
+    function updateButtonStates() {
+      document.getElementById('plusZ').disabled = state.z >= state.numSlices - 1;
+      document.getElementById('minusZ').disabled = state.z <= 0;
+      document.getElementById('undo').disabled = state.markers.length === 0;
+    }
+
+    // =====================================================
+    // Interactive event handlers with recording
+    // =====================================================
+
+    function initInteractive() {
+      document.getElementById('plusZ').onclick = (e) => {
+        if (state.isComplete || state.z >= state.numSlices - 1) return;
+        const rect = e.target.getBoundingClientRect();
+        const clickX = e.clientX - rect.left + rect.left;
+        const clickY = e.clientY - rect.top + rect.top;
+        recordAction('+z_1', [e.clientX, e.clientY]);
+        state.z++;
+        render();
+      };
+
+      document.getElementById('minusZ').onclick = (e) => {
+        if (state.isComplete || state.z <= 0) return;
+        recordAction('-z_1', [e.clientX, e.clientY]);
+        state.z--;
+        render();
+      };
+
+      document.getElementById('mip').onclick = (e) => {
+        if (state.isComplete) return;
+        recordAction('mip', [e.clientX, e.clientY]);
+        state.mip = !state.mip;
+        render();
+      };
+
+      document.getElementById('canvas').onclick = (e) => {
+        if (state.isComplete || state.mip) return;
+
+        const rect = e.target.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / CANVAS_SIZE;
+        const y = (e.clientY - rect.top) / CANVAS_SIZE;
+
+        if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+        const newMarker = [x, y, state.z];
+        state.markers.push(newMarker);
+        state.canUndo = true;
+
+        recordAction('place', [x * CANVAS_SIZE, y * CANVAS_SIZE], {
+          canvas_x_normalized: x,
+          canvas_y_normalized: y,
+          marker_z: state.z
+        });
+
+        render();
+      };
+
+      document.getElementById('undo').onclick = (e) => {
+        if (state.isComplete || state.markers.length === 0) return;
+        const removed = state.markers.pop();
+        recordAction('undo', [e.clientX, e.clientY], {
+          removed_marker: removed
+        });
+        render();
+      };
+
+      document.getElementById('done').onclick = (e) => {
+        if (state.isComplete) return;
+        recordAction('done', [e.clientX, e.clientY]);
+        state.isComplete = true;
+        render();
+        showResults();
+      };
+    }
+
+    // =====================================================
+    // Results
+    // =====================================================
+
+    function showResults() {
+      const annotatorId = document.getElementById('annotatorId').value.trim() || 'anonymous';
+      const timestamp = new Date().toISOString();
+
+      const result = {
+        task_id: taskMetadata ? taskMetadata.task_id : null,
+        task_name: taskMetadata ? `${taskMetadata.group}/${taskMetadata.name}` : null,
+        n_ground_truth_points: taskMetadata ? taskMetadata.n_points : null,
+        annotator_id: annotatorId,
+        timestamp: timestamp,
+        session_duration_ms: Date.now() - sessionStartTime,
+        n_markers_placed: state.markers.length,
+        markers: state.markers.slice(),
+        num_slices: state.numSlices,
+        click_history: clickHistory,
+        n_total_actions: clickHistory.length,
+      };
+
+      document.getElementById('resultPanel').style.display = 'block';
+      window.parent.postMessage({ type: 'annotation_complete', payload: result }, '*');
+    }
+
+    // =====================================================
+    // Initialization
+    // =====================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initInteractive();
+      if (taskData) {
+        render();
+      }
+      if (taskMetadata) {
+        document.getElementById('taskInfo').textContent =
+          `Task ${taskMetadata.task_id}: ${taskMetadata.group}/${taskMetadata.name} (${taskMetadata.n_points} points)`;
+      }
+    });
+  </script>
+
+    <script>
+        taskData = {"points": [{"x": 0.4397757025706141, "y": 0.26262658820554446, "z": 0.8498632141613653, "color": [0.0, 0.0, 0.5], "covariance": [[4.0234900927017615e-05, -6.782377333515912e-06, -4.371993922569425e-06], [-6.782377333515911e-06, 8.194351577954905e-05, -2.125111795856661e-05], [-4.371993922569421e-06, -2.125111795856661e-05, 6.605950781055874e-05]]}, {"x": 0.36411667909502454, "y": 0.33924489385733164, "z": 0.7892094610615038, "color": [0.0, 0.0, 0.820855614973262], "covariance": [[0.00018603481519221952, 7.928330008782137e-05, 3.767515133883245e-05], [7.928330008782137e-05, 0.00030596862226436053, -8.806356758862851e-05], [3.7675151338832465e-05, -8.806356758862852e-05, 0.0003616014710294713]]}, {"x": 0.3037431557509147, "y": 0.4473578744494391, "z": 0.7422411084420043, "color": [0.0, 0.06470588235294118, 1.0], "covariance": [[0.00011900238397985418, 2.2711960005074726e-05, 3.557042799267147e-05], [2.2711960005074723e-05, 0.0002993949147873304, -6.573804919296184e-05], [3.557042799267146e-05, -6.573804919296186e-05, 0.0001945273647855777]]}, {"x": 0.2924343081087691, "y": 0.5473917445716912, "z": 0.6981412971055583, "color": [0.0, 0.34705882352941175, 1.0], "covariance": [[0.00037454693651763895, -8.371515880759165e-05, 4.939017264435722e-05], [-8.371515880759164e-05, 0.0003943179580291138, -4.311724964625516e-05], [4.939017264435722e-05, -4.311724964625514e-05, 0.00036637244876917244]]}, {"x": 0.31206363702066064, "y": 0.6276283357733722, "z": 0.6491263100310732, "color": [0.0, 0.6450980392156863, 1.0], "covariance": [[0.00010903111772534837, -4.7442855188470716e-05, 3.5649308384757392e-06], [-4.7442855188470716e-05, 0.00010487632486704931, 2.1900280992904926e-05], [3.5649308384757443e-06, 2.1900280992904926e-05, 9.59419526862356e-05]]}, {"x": 0.3443896644694489, "y": 0.6903526249515304, "z": 0.630865757197709, "color": [0.022137887413029723, 0.9274509803921569, 0.9456040480708413], "covariance": [[0.00010039028850136502, 2.707329630887422e-06, 2.2755273976015514e-05], [2.707329630887425e-06, 0.0001144649569978606, -2.656572038934966e-05], [2.2755273976015518e-05, -2.656572038934966e-05, 0.00017409834702040853]]}, {"x": 0.450078089691057, "y": 0.7691624009540525, "z": 0.6412118046920379, "color": [0.24984187223276405, 1.0, 0.717900063251107], "covariance": [[0.0002554991688442213, 2.9181867429701854e-06, 7.584646383494004e-06], [2.918186742970182e-06, 0.000274836775926482, 1.3827025208149507e-05], [7.584646383493997e-06, 1.382702520814949e-05, 0.0002591882106796166]]}, {"x": 0.5488541248747123, "y": 0.776468259580347, "z": 0.6932232888417983, "color": [0.4901960784313725, 1.0, 0.4775458570524984], "covariance": [[0.00014853998078765343, 2.018831307760353e-06, -4.215207093528389e-05], [2.0188313077603533e-06, 3.409508593324952e-05, -1.651140696564028e-05], [-4.215207093528388e-05, -1.6511406965640276e-05, 9.348821876907672e-05]]}, {"x": 0.6672872391572834, "y": 0.682791160254088, "z": 0.6815902870114682, "color": [0.7179000632511068, 1.0, 0.2498418722327641], "covariance": [[0.00018036580953511945, 0.00010752885196297107, -0.00011157322379164937], [0.00010752885196297106, 0.0003262672581152415, -5.2652793330909995e-05], [-0.00011157322379164937, -5.265279333091001e-05, 0.00033672135945209776]]}, {"x": 0.7193860489252266, "y": 0.6206744160517588, "z": 0.6954478843861887, "color": [0.9456040480708408, 0.9883805374001459, 0.022137887413030133], "covariance": [[0.0005191108168735187, 8.452376439224446e-05, -8.280370767058159e-05], [8.452376439224448e-05, 0.00042101586158546693, -6.730332354722006e-05], [-8.280370767058159e-05, -6.730332354722008e-05, 0.00026858008176178894]]}, {"x": 0.7234675914223524, "y": 0.49770102456881177, "z": 0.6027004084526053, "color": [1.0, 0.7269426289034134, 0.0], "covariance": [[0.00016395675532706203, 1.2408328296407527e-05, -1.57370009406222e-05], [1.2408328296407527e-05, 8.840544948869266e-05, 4.0357886858815294e-05], [-1.57370009406222e-05, 4.03578868588153e-05, 9.92934598097599e-05]]}, {"x": 0.6827138630280148, "y": 0.42086157780666483, "z": 0.5817149319555199, "color": [1.0, 0.4509803921568629, 0.0], "covariance": [[0.00017913688279176153, 4.4473039254618855e-05, -1.2309982185982221e-05], [4.447303925461884e-05, 0.00010308911102465979, 1.7304185794840683e-05], [-1.2309982185982221e-05, 1.7304185794840686e-05, 0.00011823946041959312]]}, {"x": 0.6351699206982753, "y": 0.34131350304835756, "z": 0.5749303649579859, "color": [1.0, 0.18954248366013093, 0.0], "covariance": [[7.34025703376089e-05, 4.020897536503725e-05, -1.344195474895949e-05], [4.020897536503725e-05, 0.0001386047645072784, 5.417549762070819e-06], [-1.344195474895949e-05, 5.417549762070818e-06, 8.578473292309925e-05]]}, {"x": 0.5529966625050512, "y": 0.29946842401449303, "z": 0.47873769873073535, "color": [0.8208556149732622, 0.0, 0.0], "covariance": [[0.00021817897137973197, -3.421936466988959e-05, -4.637618494585015e-05], [-3.4219364669889594e-05, 0.00017817782186148323, 2.2953616550288412e-05], [-4.637618494585015e-05, 2.295361655028843e-05, 0.0002074562195350001]]}, {"x": 0.4420121817605512, "y": 0.22750175658557942, "z": 0.4429019069419536, "color": [0.5, 0.0, 0.0], "covariance": [[0.00018938605998046953, -2.6410980122225635e-05, 2.496117877110103e-05], [-2.6410980122225635e-05, 0.00021122493060308256, -5.11331071225907e-05], [2.4961178771101032e-05, -5.113310712259072e-05, 0.0003276680484522996]]}], "bg_color": 0.1723678222077887, "metadata": {"n_points": 15, "z_waypoints": [0.8690718714865268, 0.42305565300523795], "z_range": [0.43998216376460214, 0.851520373913032]}};
+        taskMetadata = {"task_id": 0, "original_idx": 62, "original_instance_idx": 62, "group": "handmade", "name": "teardrop", "sample": 0, "n_points": 15, "n_virtual_steps": 116};
+        state.numSlices = 16;
+    </script>
+    </body>
+</html>
