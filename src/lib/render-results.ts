@@ -62,10 +62,10 @@ export type RenderResultsOpts = {
   you: Annotator | null;
 };
 
-const NUM_SLICES = 16;
+export const NUM_SLICES = 16;
 const XY_TOL = 0.02;
 const Z_TOL = 1.5;
-const CANVAS_PX = 224;
+export const CANVAS_PX = 224;
 const PLAYBACK_TOTAL_MS = 22000;
 const PLAYBACK_PAUSE_MS = 1500;
 
@@ -281,14 +281,14 @@ function computeAll(a: Normalized, gt: { x: number; y: number; z_slice: number }
 
 // ---------- Playback rendering ----------
 
-function invertMatrix2x2(m: number[][]): number[][] {
+export function invertMatrix2x2(m: number[][]): number[][] {
   const a = m[0][0], b = m[0][1], c = m[1][0], d = m[1][1];
   const det = a * d - b * c;
   if (Math.abs(det) < 1e-10) return [[1 / 4, 0], [0, 1 / 4]];
   return [[d / det, -b / det], [-c / det, a / det]];
 }
 
-function paintGaussians(
+export function paintGaussians(
   ctx: CanvasRenderingContext2D,
   sample: TaskInstance,
   xySize: number,
@@ -344,7 +344,7 @@ function paintGaussians(
   ctx.putImageData(img, 0, 0);
 }
 
-function drawMarkersSlice(
+export function drawMarkersSlice(
   ctx: CanvasRenderingContext2D,
   markers: [number, number, number][],
   currentZ: number,
@@ -376,7 +376,7 @@ function drawMarkersSlice(
   }
 }
 
-function drawMarkersMIP(
+export function drawMarkersMIP(
   ctx: CanvasRenderingContext2D,
   markers: [number, number, number][],
   bgColor: number,
