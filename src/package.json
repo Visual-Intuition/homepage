@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "node --env-file=.env.local scripts/seed_submissions.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

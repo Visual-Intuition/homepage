@@ -1,0 +1,166 @@
+.page {
+  --bg: #0a0a0c;
+  --panel: #14151a;
+  --border: #2a2b33;
+  --text: #e8e9ed;
+  --dim: #8b8d97;
+  --highlight: #4ade80;
+  --model: #a78bfa;
+  background: var(--bg);
+  color: var(--text);
+  padding: 48px 32px 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+  line-height: 1.5;
+  font-weight: 200;
+  letter-spacing: 0.01em;
+  min-height: 100vh;
+}
+
+.h1 {
+  font-size: 56px;
+  font-weight: 200;
+  text-align: center;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin: 24px 0 72px;
+}
+
+.h2 {
+  font-size: 26px;
+  font-weight: 200;
+  text-align: center;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  margin: 72px 0 24px;
+}
+
+.plot {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.compareGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.compareCell {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.compareCellYou { border-color: var(--highlight); }
+.compareCellModel { border-color: var(--model); }
+.compareCellPlaceholder { opacity: 0.6; }
+
+.cellLabel {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.compareCellYou .cellLabel { color: var(--highlight); }
+.compareCellModel .cellLabel { color: var(--model); }
+
+.playCanvas {
+  background: #000;
+  border-radius: 4px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  display: block;
+}
+
+.cellStatus {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--dim);
+  text-align: center;
+  line-height: 1.4;
+  min-height: 28px;
+}
+
+.placeholderBox {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dim);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.playControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 12px 0 24px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.playControls button {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.playControls button:hover { border-color: var(--text); }
+
+.playProgressBar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.playProgressFill {
+  height: 100%;
+  background: var(--highlight);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.explainer {
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.6;
+  text-align: center;
+  margin: 20px auto 0;
+  max-width: 760px;
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
