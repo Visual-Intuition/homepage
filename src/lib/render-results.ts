@@ -58,6 +58,7 @@ export type RenderResultsOpts = {
   container: HTMLElement;
   cohort: Annotator[];
   model: ModelData;
+  frontier?: ModelData | null;
   instance: TaskInstance;
   you: Annotator | null;
 };
@@ -422,18 +423,98 @@ function replayState(actions: ClickAction[], idx: number) {
   return { z, mip, markers };
 }
 
-function renderFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: number, instance: TaskInstance) {
+// ---------- Playback "GUI" frame: canvas + buttons + red X cursor ----------
+
+const PLAY_GUI_W = 360;
+const PLAY_GUI_H = 240;
+const PLAY_PAD = 10;
+const PLAY_DOT_PX = 224; // matches CANVAS_PX so the existing draw functions just work
+const PLAY_BTN_X = PLAY_PAD + PLAY_DOT_PX + 12;
+const PLAY_BTN_W = 92;
+const PLAY_BTN_H = 36;
+const PLAY_BTN_GAP = 8;
+const PLAY_BTNS = (
+  [
+    { id: "+z_1", label: "+z",   color: "#4ade80" },
+    { id: "-z_1", label: "-z",   color: "#f87171" },
+    { id: "mip",  label: "MIP",  color: "#a78bfa" },
+    { id: "undo", label: "Undo", color: "#f87171" },
+    { id: "done", label: "Done", color: "#00d4aa" },
+  ] as const
+).map((b, i) => ({ ...b, x: PLAY_BTN_X, y: PLAY_PAD + i * (PLAY_BTN_H + PLAY_BTN_GAP) }));
+
+function cursorPosForAction(a: ClickAction | undefined): { x: number; y: number } | null {
+  if (!a) return null;
+  if (a.action_type === "place") {
+    const cx = a.canvas_x_normalized ?? (a.action ? a.action[0] / 256 : null);
+    const cy = a.canvas_y_normalized ?? (a.action ? a.action[1] / 256 : null);
+    if (cx == null || cy == null) return null;
+    return { x: PLAY_PAD + cx * PLAY_DOT_PX, y: PLAY_PAD + cy * PLAY_DOT_PX };
+  }
+  const btn = PLAY_BTNS.find((b) => b.id === a.action_type);
+  if (btn) return { x: btn.x + PLAY_BTN_W / 2, y: btn.y + PLAY_BTN_H / 2 };
+  return null;
+}
+
+function drawCursorX(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.strokeStyle = "rgb(248, 113, 113)";
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  const r = 9;
+  ctx.beginPath();
+  ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r);
+  ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r);
+  ctx.stroke();
+}
+
+function renderGuiFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: number, instance: TaskInstance) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return { z: 0, mip: false, markers: [] };
   const s = replayState(actions, idx);
   const bg = instance.bg_color ?? 0.17;
-  if (s.mip) {
-    paintGaussians(ctx, instance, CANVAS_PX, bg, 0, 1, true);
-    drawMarkersMIP(ctx, s.markers, bg);
-  } else {
-    paintGaussians(ctx, instance, CANVAS_PX, bg, s.z / NUM_SLICES, (s.z + 1) / NUM_SLICES, false);
-    drawMarkersSlice(ctx, s.markers, s.z, bg);
+
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, PLAY_GUI_W, PLAY_GUI_H);
+
+  // Render dots into an offscreen canvas at PLAY_DOT_PX (== CANVAS_PX, so the
+  // existing paintGaussians / drawMarkers* helpers work without modification),
+  // then composite onto the main GUI canvas at (PLAY_PAD, PLAY_PAD).
+  const off = document.createElement("canvas");
+  off.width = PLAY_DOT_PX;
+  off.height = PLAY_DOT_PX;
+  const offCtx = off.getContext("2d");
+  if (offCtx) {
+    if (s.mip) {
+      paintGaussians(offCtx, instance, PLAY_DOT_PX, bg, 0, 1, true);
+      drawMarkersMIP(offCtx, s.markers, bg);
+    } else {
+      paintGaussians(offCtx, instance, PLAY_DOT_PX, bg, s.z / NUM_SLICES, (s.z + 1) / NUM_SLICES, false);
+      drawMarkersSlice(offCtx, s.markers, s.z, bg);
+    }
+    ctx.drawImage(off, PLAY_PAD, PLAY_PAD);
   }
+
+  // Buttons
+  ctx.font = "600 13px Inter, system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (const b of PLAY_BTNS) {
+    const mipActive = b.id === "mip" && s.mip;
+    ctx.fillStyle = mipActive || b.id === "done" ? b.color : "#14151a";
+    ctx.fillRect(b.x, b.y, PLAY_BTN_W, PLAY_BTN_H);
+    ctx.strokeStyle = b.color;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(b.x, b.y, PLAY_BTN_W, PLAY_BTN_H);
+    ctx.fillStyle = mipActive || b.id === "done" ? "#0a0a0c" : b.color;
+    ctx.fillText(b.label, b.x + PLAY_BTN_W / 2, b.y + PLAY_BTN_H / 2);
+  }
+
+  // Red X cursor at the current action's click position
+  if (idx >= 0 && idx < actions.length) {
+    const pos = cursorPosForAction(actions[idx]);
+    if (pos) drawCursorX(ctx, pos.x, pos.y);
+  }
+
   return s;
 }
 
@@ -686,14 +767,17 @@ export function renderResults(opts: RenderResultsOpts): () => void {
 
   const youCanvas = container.querySelector<HTMLCanvasElement>("#cmp-you");
   const modelCanvas = container.querySelector<HTMLCanvasElement>("#cmp-model");
+  const frontierCanvas = container.querySelector<HTMLCanvasElement>("#cmp-frontier");
   const youStatus = container.querySelector("#cmp-you-status");
   const modelStatus = container.querySelector("#cmp-model-status");
+  const frontierStatus = container.querySelector("#cmp-frontier-status");
   const fill = container.querySelector<HTMLElement>("#play-fill");
   const timeEl = container.querySelector("#play-time");
   const playPauseBtn = container.querySelector<HTMLButtonElement>("#play-pause");
 
   const youActions = playbackHumanComp.actions;
   const modelActions = computed.find((c) => c.isModel)?.actions ?? [];
+  const frontierActions = opts.frontier?.actions ?? [];
 
   function tick(now: number) {
     if (startTime === null) startTime = now;
@@ -701,16 +785,15 @@ export function renderResults(opts: RenderResultsOpts): () => void {
     const cycle = PLAYBACK_TOTAL_MS + PLAYBACK_PAUSE_MS;
     const local = elapsed % cycle;
     const frac = Math.min(1, local / PLAYBACK_TOTAL_MS);
-    if (youCanvas) {
-      const idx = Math.min(youActions.length - 1, Math.floor(frac * youActions.length));
-      renderFrame(youCanvas, youActions, idx, instance);
-      if (youStatus) youStatus.textContent = `${idx + 1} / ${youActions.length}`;
-    }
-    if (modelCanvas) {
-      const idx = Math.min(modelActions.length - 1, Math.floor(frac * modelActions.length));
-      renderFrame(modelCanvas, modelActions, idx, instance);
-      if (modelStatus) modelStatus.textContent = `${idx + 1} / ${modelActions.length}`;
-    }
+    const tickPanel = (canvas: HTMLCanvasElement | null, statusEl: Element | null, actions: ClickAction[]) => {
+      if (!canvas || actions.length === 0) return;
+      const idx = Math.min(actions.length - 1, Math.floor(frac * actions.length));
+      renderGuiFrame(canvas, actions, idx, instance);
+      if (statusEl) statusEl.textContent = `${idx + 1} / ${actions.length}`;
+    };
+    tickPanel(youCanvas, youStatus, youActions);
+    tickPanel(modelCanvas, modelStatus, modelActions);
+    tickPanel(frontierCanvas, frontierStatus, frontierActions);
     if (fill) fill.style.width = `${frac * 100}%`;
     if (timeEl) {
       timeEl.textContent = `${(local / 1000).toFixed(1)}s / ${(PLAYBACK_TOTAL_MS / 1000).toFixed(1)}s`;

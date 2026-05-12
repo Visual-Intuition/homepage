@@ -24,7 +24,7 @@ export default async function ResultsPage({ params }: { params: Promise<Params> 
     raw: data.submission_data as SubmissionData,
   };
 
-  const { cohort, model, instance } = await loadCohortAndStatic({ excludeId: id });
+  const { cohort, model, frontier, instance } = await loadCohortAndStatic({ excludeId: id });
 
-  return <ResultsView cohort={cohort} model={model} instance={instance} you={you} />;
+  return <ResultsView cohort={cohort} model={model} frontier={frontier} instance={instance} you={you} />;
 }

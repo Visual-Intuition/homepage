@@ -8,11 +8,12 @@ import styles from "./results.module.css";
 type Props = {
   cohort: Annotator[];
   model: ModelData;
+  frontier: ModelData | null;
   instance: TaskInstance;
   you: Annotator | null;
 };
 
-export function ResultsView({ cohort, model, instance, you }: Props) {
+export function ResultsView({ cohort, model, frontier, instance, you }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export function ResultsView({ cohort, model, instance, you }: Props) {
         container: containerRef.current,
         cohort,
         model,
+        frontier,
         instance,
         you,
       });
@@ -40,7 +42,7 @@ export function ResultsView({ cohort, model, instance, you }: Props) {
       cancelled = true;
       cleanup?.();
     };
-  }, [cohort, model, instance, you]);
+  }, [cohort, model, frontier, instance, you]);
 
   const isYou = !!you;
   const youLabel = isYou ? "You" : "An Annotator";
@@ -60,22 +62,18 @@ export function ResultsView({ cohort, model, instance, you }: Props) {
       <div className={styles.compareGrid}>
         <div className={`${styles.compareCell} ${isYou ? styles.compareCellYou : ""}`}>
           <div className={styles.cellLabel}>{youLabel}</div>
-          <canvas className={styles.playCanvas} id="cmp-you" width="224" height="224" />
+          <canvas className={styles.playCanvas} id="cmp-you" width="360" height="240" />
           <div className={styles.cellStatus} id="cmp-you-status">&nbsp;</div>
         </div>
         <div className={`${styles.compareCell} ${styles.compareCellModel}`}>
           <div className={styles.cellLabel}>Our model</div>
-          <canvas className={styles.playCanvas} id="cmp-model" width="224" height="224" />
+          <canvas className={styles.playCanvas} id="cmp-model" width="360" height="240" />
           <div className={styles.cellStatus} id="cmp-model-status">&nbsp;</div>
         </div>
-        <div className={`${styles.compareCell} ${styles.compareCellPlaceholder}`}>
+        <div className={`${styles.compareCell} ${styles.compareCellFrontier}`}>
           <div className={styles.cellLabel}>Frontier VLM</div>
-          <div className={styles.placeholderBox}>
-            Coming soon
-            <br />
-            <span style={{ opacity: 0.6 }}>Claude / GPT-class</span>
-          </div>
-          <div className={styles.cellStatus}>&nbsp;</div>
+          <canvas className={styles.playCanvas} id="cmp-frontier" width="360" height="240" />
+          <div className={styles.cellStatus} id="cmp-frontier-status">&nbsp;</div>
         </div>
       </div>
       <div className={styles.playControls}>

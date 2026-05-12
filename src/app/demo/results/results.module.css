@@ -63,6 +63,7 @@
 
 .compareCellYou { border-color: var(--highlight); }
 .compareCellModel { border-color: var(--model); }
+.compareCellFrontier { border-color: #fb923c; }
 .compareCellPlaceholder { opacity: 0.6; }
 
 .cellLabel {
@@ -75,13 +76,14 @@
 
 .compareCellYou .cellLabel { color: var(--highlight); }
 .compareCellModel .cellLabel { color: var(--model); }
+.compareCellFrontier .cellLabel { color: #fb923c; }
 
 .playCanvas {
   background: #000;
   border-radius: 4px;
   width: 100%;
   height: auto;
-  aspect-ratio: 1;
+  aspect-ratio: 3 / 2;
   display: block;
 }
 

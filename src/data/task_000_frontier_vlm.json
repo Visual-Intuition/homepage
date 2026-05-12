@@ -1,0 +1,783 @@
+[
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      124
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 0
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      331,
+      145
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 200
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      135
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 300
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      335,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 400
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      335,
+      155
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 500
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      122
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 600
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      164
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 700
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      133
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 900
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      143
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 1100
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 1200
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      142
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 1500
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      335,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 1600
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      328,
+      164
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 1700
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      335,
+      125
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 1900
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      337,
+      164
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 2000
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      335,
+      166
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 2100
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      130
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 2300
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      121
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 2400
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 2500
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      135
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 2600
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 2900
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      336,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 3000
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      331,
+      145
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 3100
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      143
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 3200
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      157
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 3300
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 3800
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 3900
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      134
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 4000
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      131
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 4100
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      127
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 4200
+  },
+  {
+    "z": 0,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      124
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 4600
+  },
+  {
+    "z": 0,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      42
+    ],
+    "action_type": "+z_1",
+    "timestamp_ms": 4700
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 4900
+  },
+  {
+    "z": 1,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5000
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5200
+  },
+  {
+    "z": 1,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5300
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5400
+  },
+  {
+    "z": 1,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      170
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 5500
+  },
+  {
+    "z": 1,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      336,
+      125
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5600
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      330,
+      154
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 5700
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      331,
+      125
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5800
+  },
+  {
+    "z": 1,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      130
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 5900
+  },
+  {
+    "z": 1,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      335,
+      30
+    ],
+    "action_type": "+z_1",
+    "timestamp_ms": 6000
+  },
+  {
+    "z": 2,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      335,
+      33
+    ],
+    "action_type": "+z_1",
+    "timestamp_ms": 6100
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      331,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 6300
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      140
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 6400
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      161
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 6600
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      333,
+      145
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 6800
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 6900
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7200
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      127
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7400
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7500
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      130
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7700
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7800
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      334,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 7900
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      162
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 8000
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8100
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      127
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8200
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      143
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8300
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      143
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8400
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      333,
+      136
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8600
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      337,
+      138
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8800
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      329,
+      131
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 8900
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      333,
+      120
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9000
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      334,
+      156
+    ],
+    "action_type": "undo",
+    "timestamp_ms": 9200
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      124
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9300
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      336,
+      127
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9400
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9500
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      332,
+      128
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9600
+  },
+  {
+    "z": 3,
+    "mip": true,
+    "n_pts": 0,
+    "action": [
+      332,
+      139
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9700
+  },
+  {
+    "z": 3,
+    "mip": false,
+    "n_pts": 0,
+    "action": [
+      331,
+      129
+    ],
+    "action_type": "mip",
+    "timestamp_ms": 9800
+  }
+]
