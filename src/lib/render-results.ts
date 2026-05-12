@@ -787,8 +787,14 @@ export function renderResults(opts: RenderResultsOpts): () => void {
   const playbackHumanComp =
     youComp ??
     (() => {
+      // Cohort view picks a random human for the "An Annotator" playback.
+      // Filter out outliers (>175 actions) so the gif isn't dominated by a
+      // hesitant or distracted annotator. Fall back to the full set if the
+      // filter empties.
       const humans = computed.filter((c) => !c.isModel);
-      return humans[Math.floor(Math.random() * humans.length)];
+      const trimmed = humans.filter((c) => c.actions.length <= 175);
+      const pool = trimmed.length > 0 ? trimmed : humans;
+      return pool[Math.floor(Math.random() * pool.length)];
     })();
 
   // Render the histograms
