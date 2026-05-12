@@ -140,7 +140,7 @@ function hungarian(cost: number[][]): number[] {
     do {
       used[j0] = true;
       const i0 = p[j0];
-      let delta = BIG;
+      let delta = Infinity;
       let j1 = -1;
       for (let j = 1; j <= size; j++) {
         if (used[j]) continue;
