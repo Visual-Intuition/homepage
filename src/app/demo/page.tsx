@@ -8,12 +8,20 @@ export default function Demo() {
         Try the colored dot tracking task. Click colored dots in order (blue to red) through the 3D
         volume. Your annotation will be saved and compared to other humans and our model.
       </p>
-      <Link
-        href="/demo/task"
-        className="rounded border border-white/30 px-6 py-2 font-mono text-sm tracking-widest text-white transition hover:border-white hover:bg-white/5"
-      >
-        Start Task
-      </Link>
+      <div className="flex gap-4">
+        <Link
+          href="/demo/task"
+          className="rounded border border-white/30 px-6 py-2 font-mono text-sm tracking-widest text-white transition hover:border-white hover:bg-white/5"
+        >
+          Start Task
+        </Link>
+        <Link
+          href="/demo/results"
+          className="rounded border border-white/30 px-6 py-2 font-mono text-sm tracking-widest text-white transition hover:border-white hover:bg-white/5"
+        >
+          View Results
+        </Link>
+      </div>
     </main>
   );
 }
