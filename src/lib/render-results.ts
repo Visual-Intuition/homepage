@@ -427,28 +427,31 @@ function replayState(actions: ClickAction[], idx: number) {
 
 // ---------- Playback "GUI" frame: faithful scaled rendition of task_000.html ----------
 
+// Sized to roughly match the live task page's canvas:button proportions
+// (real GUI is ~540:126 canvas:controls; here we use 240:84 ≈ 2.9:1, a
+// compromise between exact match and readable text in small playback panels).
 const PLAY_GUI_W = 380;
-const PLAY_GUI_H = 280;
+const PLAY_GUI_H = 304;
 const PLAY_OUTER_PAD = 8;
 
 const PLAY_PANEL_X = PLAY_OUTER_PAD;
 const PLAY_PANEL_Y = PLAY_OUTER_PAD;
 const PLAY_PANEL_W = PLAY_GUI_W - 2 * PLAY_OUTER_PAD; // 364
-const PLAY_PANEL_H = 220;
+const PLAY_PANEL_H = 264;
 const PLAY_PANEL_RADIUS = 12;
 
-const PLAY_INNER_PAD = 10;
-const PLAY_DOT_PX = 200;
+const PLAY_INNER_PAD = 12;
+const PLAY_DOT_PX = 240;
 const PLAY_CANVAS_X = PLAY_PANEL_X + PLAY_INNER_PAD;
-const PLAY_CANVAS_Y = PLAY_PANEL_Y + (PLAY_PANEL_H - PLAY_DOT_PX) / 2;
+const PLAY_CANVAS_Y = PLAY_PANEL_Y + PLAY_INNER_PAD;
 const PLAY_CANVAS_RADIUS = 6;
 
-const PLAY_CTRL_GAP = 12;
+const PLAY_CTRL_GAP = 16;
 const PLAY_BTN_X = PLAY_CANVAS_X + PLAY_DOT_PX + PLAY_CTRL_GAP;
 const PLAY_BTN_W = PLAY_PANEL_W - PLAY_INNER_PAD - PLAY_DOT_PX - PLAY_CTRL_GAP - PLAY_INNER_PAD;
-const PLAY_BTN_H = 30;
-const PLAY_BTN_GAP = 6;
-const PLAY_BTN_TOTAL = 5 * PLAY_BTN_H + 4 * PLAY_BTN_GAP; // 174
+const PLAY_BTN_H = 28;
+const PLAY_BTN_GAP = 8;
+const PLAY_BTN_TOTAL = 5 * PLAY_BTN_H + 4 * PLAY_BTN_GAP; // 172
 const PLAY_BTN_Y_START = PLAY_PANEL_Y + (PLAY_PANEL_H - PLAY_BTN_TOTAL) / 2;
 
 const PLAY_STATUS_Y = PLAY_PANEL_Y + PLAY_PANEL_H + 6;
