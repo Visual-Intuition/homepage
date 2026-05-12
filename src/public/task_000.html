@@ -13,7 +13,7 @@
     }
 
     :root {
-      --bg-dark: #0a0a0c;
+      --bg-dark: #000000;
       --bg-panel: #14151a;
       --bg-elevated: #1c1d24;
       --border: #2a2b33;
@@ -24,7 +24,13 @@
       --accent-red: #f87171;
       --accent-purple: #a78bfa;
       --accent-blue: #60a5fa;
+      --canvas-px: min(60vmin, 520px);
+      --controls-w: clamp(110px, 14vmin, 160px);
+      --btn-font: clamp(12px, 1.5vmin, 16px);
+      --btn-pad: clamp(8px, 1.2vmin, 14px);
     }
+
+    html, body { background: var(--bg-dark); }
 
     body {
       font-family: 'DM Sans', sans-serif;
@@ -33,6 +39,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       min-height: 100vh;
       padding: 24px;
     }
@@ -99,10 +106,13 @@
     #canvas {
       display: block;
       cursor: crosshair;
+      width: var(--canvas-px);
+      height: var(--canvas-px);
+      image-rendering: auto;
     }
 
     .controls {
-      width: 120px;
+      width: var(--controls-w);
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -131,9 +141,9 @@
 
     .nav-btn {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-size: var(--btn-font);
       font-weight: 500;
-      padding: 10px;
+      padding: var(--btn-pad);
       border: 2px solid var(--border);
       border-radius: 6px;
       background: var(--bg-panel);
@@ -168,9 +178,9 @@
 
     .action-btn {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
+      font-size: var(--btn-font);
       font-weight: 600;
-      padding: 12px;
+      padding: var(--btn-pad);
       border: 2px solid var(--border);
       border-radius: 6px;
       cursor: pointer;
@@ -317,24 +327,6 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Colored Dot Tracking - Annotation Task</h1>
-    <div class="task-info" id="taskInfo">Task ID: --</div>
-  </div>
-
-  <div class="instructions">
-    <strong>Instructions:</strong> You are looking at colored dots in a 3D volume viewed one z-slice at a time.
-    The dots are colored from <strong style="color:#0000ff">blue</strong> (first) to <strong style="color:#ff0000">red</strong> (last) using a jet colormap.
-    Click each dot <strong>in color order</strong> (blue â†’ cyan â†’ green â†’ yellow â†’ red), navigating z-slices to find each one.
-    Use <strong>MIP</strong> to see all dots at once (you can't place markers in MIP mode).
-    Click <strong>Done</strong> when finished.
-  </div>
-
-  <div class="annotator-section">
-    <label>Annotator ID:</label>
-    <input type="text" id="annotatorId" placeholder="e.g. your_name" />
-  </div>
-
   <div class="container">
     <div class="main-area">
       <div class="canvas-wrapper">
@@ -342,16 +334,12 @@
       </div>
       <div class="controls">
         <div class="control-section">
-          <div class="section-label">Z Navigation</div>
           <div class="nav-buttons">
-            <button class="nav-btn plus-z" id="plusZ">+z 1</button>
-            <button class="nav-btn minus-z" id="minusZ">-z 1</button>
+            <button class="nav-btn plus-z" id="plusZ">+z</button>
+            <button class="nav-btn minus-z" id="minusZ">-z</button>
           </div>
         </div>
-        <div class="control-section">
-          <div class="section-label">View Mode</div>
-          <button class="action-btn mip" id="mip">MIP</button>
-        </div>
+        <button class="action-btn mip" id="mip">MIP</button>
         <button class="action-btn undo" id="undo">Undo</button>
         <button class="action-btn done" id="done">Done</button>
       </div>
@@ -673,8 +661,8 @@
         if (state.isComplete || state.mip) return;
 
         const rect = e.target.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / CANVAS_SIZE;
-        const y = (e.clientY - rect.top) / CANVAS_SIZE;
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
 
         if (x < 0 || x > 1 || y < 0 || y > 1) return;
 
@@ -714,7 +702,7 @@
     // =====================================================
 
     function showResults() {
-      const annotatorId = document.getElementById('annotatorId').value.trim() || 'anonymous';
+      const annotatorId = 'anonymous';
       const timestamp = new Date().toISOString();
 
       const result = {
@@ -731,7 +719,6 @@
         n_total_actions: clickHistory.length,
       };
 
-      document.getElementById('resultPanel').style.display = 'block';
       window.parent.postMessage({ type: 'annotation_complete', payload: result }, '*');
     }
 
@@ -743,10 +730,6 @@
       initInteractive();
       if (taskData) {
         render();
-      }
-      if (taskMetadata) {
-        document.getElementById('taskInfo').textContent =
-          `Task ${taskMetadata.task_id}: ${taskMetadata.group}/${taskMetadata.name} (${taskMetadata.n_points} points)`;
       }
     });
   </script>
