@@ -180,30 +180,26 @@ const NAV_FRAMES: Frame[] = [
   { d: 1200, z: 4, mip: false, markers: [], cursor: "minusZ" },
 ];
 
-// Real task_022 dot positions visible at z=5:
-//   (0.520, 0.519) at z=4   (faintly visible at z=5)
-//   (0.507, 0.589) at z=5
-//   (0.500, 0.669) at z=5
-const WRONG_SPOT: [number, number] = [0.85, 0.15]; // empty top-right
-const RIGHT_SPOT: [number, number] = [0.500, 0.669]; // actual z=5 dot
+// task_022 dots actually visible at slice 8 (rendering filter is z in [8/16, 9/16) ):
+//   (0.555, 0.758), (0.767, 0.571), (0.720, 0.645)
+const WRONG_SPOT: [number, number] = [0.15, 0.15]; // empty top-left at z=8
+const RIGHT_SPOT: [number, number] = [0.555, 0.758]; // real z=8 dot
 
 const UNDO_FRAMES: Frame[] = [
-  { d: 1000, z: 5, mip: false, markers: [], cursor: { canvas: WRONG_SPOT } },
-  { d: 1000, z: 5, mip: false, markers: [[...WRONG_SPOT, 5]], cursor: "undo" },
-  { d: 1000, z: 5, mip: false, markers: [], cursor: { canvas: RIGHT_SPOT } },
-  { d: 1300, z: 5, mip: false, markers: [[...RIGHT_SPOT, 5]], cursor: null },
+  { d: 1000, z: 8, mip: false, markers: [], cursor: { canvas: WRONG_SPOT } },
+  { d: 1000, z: 8, mip: false, markers: [[...WRONG_SPOT, 8]], cursor: "undo" },
+  { d: 1000, z: 8, mip: false, markers: [], cursor: { canvas: RIGHT_SPOT } },
+  { d: 1300, z: 8, mip: false, markers: [[...RIGHT_SPOT, 8]], cursor: null },
 ];
 
-const DOT_A: [number, number] = [0.520, 0.519];
-const DOT_B: [number, number] = [0.507, 0.589];
-const DOT_C: [number, number] = [0.500, 0.669];
+// Completed annotation = every instance point as a marker, in spectrum order.
+const ALL_MARKERS: [number, number, number][] = (INSTANCE.points || []).map(
+  (p) => [p.x, p.y, Math.floor(p.z * NUM_SLICES)],
+);
 
 const DONE_FRAMES: Frame[] = [
-  { d: 700, z: 5, mip: false, markers: [], cursor: { canvas: DOT_A } },
-  { d: 600, z: 5, mip: false, markers: [[...DOT_A, 5]], cursor: { canvas: DOT_B } },
-  { d: 600, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5]], cursor: { canvas: DOT_C } },
-  { d: 800, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5], [...DOT_C, 5]], cursor: "done" },
-  { d: 1200, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5], [...DOT_C, 5]], cursor: null },
+  { d: 2000, z: 0, mip: true, markers: ALL_MARKERS, cursor: null },
+  { d: 1800, z: 0, mip: true, markers: ALL_MARKERS, cursor: "done" },
 ];
 
 function MockTaskCanvas({ frames }: { frames: Frame[] }) {
