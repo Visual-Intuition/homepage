@@ -23,7 +23,7 @@ export async function loadCohortAndStatic(opts: { excludeId?: string }): Promise
   if (error) throw new Error(`Failed to load cohort: ${error.message}`);
 
   const cohort: Annotator[] = (data ?? []).map((row) => ({
-    id: row.annotator_name ?? row.id,
+    id: row.id,
     raw: row.submission_data as SubmissionData,
   }));
 

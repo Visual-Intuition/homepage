@@ -20,7 +20,7 @@ export default async function ResultsPage({ params }: { params: Promise<Params> 
   if (error || !data) notFound();
 
   const you = {
-    id: data.annotator_name ?? data.id,
+    id: data.id,
     raw: data.submission_data as SubmissionData,
   };
 
