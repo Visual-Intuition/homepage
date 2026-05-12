@@ -350,11 +350,12 @@ export function drawMarkersSlice(
   markers: [number, number, number][],
   currentZ: number,
   bgColor: number,
+  canvasPx: number = CANVAS_PX,
 ) {
   const c = bgColor < 0.5 ? "rgb(255,255,255)" : "rgb(0,0,0)";
   for (const [mx, my, mz] of markers) {
-    const px = mx * CANVAS_PX;
-    const py = my * CANVAS_PX;
+    const px = mx * canvasPx;
+    const py = my * canvasPx;
     const dz = Math.abs(currentZ - mz);
     let radius;
     let filled = false;
@@ -381,21 +382,22 @@ export function drawMarkersMIP(
   ctx: CanvasRenderingContext2D,
   markers: [number, number, number][],
   bgColor: number,
+  canvasPx: number = CANVAS_PX,
 ) {
   const c = bgColor < 0.5 ? "rgb(255,255,255)" : "rgb(0,0,0)";
   if (markers.length >= 2) {
     ctx.strokeStyle = c;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(markers[0][0] * CANVAS_PX, markers[0][1] * CANVAS_PX);
+    ctx.moveTo(markers[0][0] * canvasPx, markers[0][1] * canvasPx);
     for (let i = 1; i < markers.length; i++) {
-      ctx.lineTo(markers[i][0] * CANVAS_PX, markers[i][1] * CANVAS_PX);
+      ctx.lineTo(markers[i][0] * canvasPx, markers[i][1] * canvasPx);
     }
     ctx.stroke();
   }
   for (const [mx, my] of markers) {
     ctx.beginPath();
-    ctx.arc(mx * CANVAS_PX, my * CANVAS_PX, 7, 0, Math.PI * 2);
+    ctx.arc(mx * canvasPx, my * canvasPx, 7, 0, Math.PI * 2);
     ctx.strokeStyle = c;
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -423,25 +425,54 @@ function replayState(actions: ClickAction[], idx: number) {
   return { z, mip, markers };
 }
 
-// ---------- Playback "GUI" frame: canvas + buttons + red X cursor ----------
+// ---------- Playback "GUI" frame: faithful scaled rendition of task_000.html ----------
 
-const PLAY_GUI_W = 360;
-const PLAY_GUI_H = 240;
-const PLAY_PAD = 10;
-const PLAY_DOT_PX = 224; // matches CANVAS_PX so the existing draw functions just work
-const PLAY_BTN_X = PLAY_PAD + PLAY_DOT_PX + 12;
-const PLAY_BTN_W = 92;
-const PLAY_BTN_H = 36;
-const PLAY_BTN_GAP = 8;
+const PLAY_GUI_W = 380;
+const PLAY_GUI_H = 280;
+const PLAY_OUTER_PAD = 8;
+
+const PLAY_PANEL_X = PLAY_OUTER_PAD;
+const PLAY_PANEL_Y = PLAY_OUTER_PAD;
+const PLAY_PANEL_W = PLAY_GUI_W - 2 * PLAY_OUTER_PAD; // 364
+const PLAY_PANEL_H = 220;
+const PLAY_PANEL_RADIUS = 12;
+
+const PLAY_INNER_PAD = 10;
+const PLAY_DOT_PX = 200;
+const PLAY_CANVAS_X = PLAY_PANEL_X + PLAY_INNER_PAD;
+const PLAY_CANVAS_Y = PLAY_PANEL_Y + (PLAY_PANEL_H - PLAY_DOT_PX) / 2;
+const PLAY_CANVAS_RADIUS = 6;
+
+const PLAY_CTRL_GAP = 12;
+const PLAY_BTN_X = PLAY_CANVAS_X + PLAY_DOT_PX + PLAY_CTRL_GAP;
+const PLAY_BTN_W = PLAY_PANEL_W - PLAY_INNER_PAD - PLAY_DOT_PX - PLAY_CTRL_GAP - PLAY_INNER_PAD;
+const PLAY_BTN_H = 30;
+const PLAY_BTN_GAP = 6;
+const PLAY_BTN_TOTAL = 5 * PLAY_BTN_H + 4 * PLAY_BTN_GAP; // 174
+const PLAY_BTN_Y_START = PLAY_PANEL_Y + (PLAY_PANEL_H - PLAY_BTN_TOTAL) / 2;
+
+const PLAY_STATUS_Y = PLAY_PANEL_Y + PLAY_PANEL_H + 6;
+const PLAY_STATUS_H = PLAY_GUI_H - PLAY_STATUS_Y - PLAY_OUTER_PAD;
+
 const PLAY_BTNS = (
   [
-    { id: "+z_1", label: "+z",   color: "#4ade80" },
-    { id: "-z_1", label: "-z",   color: "#f87171" },
-    { id: "mip",  label: "MIP",  color: "#a78bfa" },
-    { id: "undo", label: "Undo", color: "#f87171" },
-    { id: "done", label: "Done", color: "#00d4aa" },
+    { id: "+z_1", label: "+z",   color: "#4ade80", filled: false },
+    { id: "-z_1", label: "-z",   color: "#f87171", filled: false },
+    { id: "mip",  label: "MIP",  color: "#a78bfa", filled: false },
+    { id: "undo", label: "Undo", color: "#f87171", filled: false },
+    { id: "done", label: "Done", color: "#00d4aa", filled: true },
   ] as const
-).map((b, i) => ({ ...b, x: PLAY_BTN_X, y: PLAY_PAD + i * (PLAY_BTN_H + PLAY_BTN_GAP) }));
+).map((b, i) => ({ ...b, x: PLAY_BTN_X, y: PLAY_BTN_Y_START + i * (PLAY_BTN_H + PLAY_BTN_GAP) }));
+
+function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
 
 function cursorPosForAction(a: ClickAction | undefined): { x: number; y: number } | null {
   if (!a) return null;
@@ -449,7 +480,7 @@ function cursorPosForAction(a: ClickAction | undefined): { x: number; y: number 
     const cx = a.canvas_x_normalized ?? (a.action ? a.action[0] / 256 : null);
     const cy = a.canvas_y_normalized ?? (a.action ? a.action[1] / 256 : null);
     if (cx == null || cy == null) return null;
-    return { x: PLAY_PAD + cx * PLAY_DOT_PX, y: PLAY_PAD + cy * PLAY_DOT_PX };
+    return { x: PLAY_CANVAS_X + cx * PLAY_DOT_PX, y: PLAY_CANVAS_Y + cy * PLAY_DOT_PX };
   }
   const btn = PLAY_BTNS.find((b) => b.id === a.action_type);
   if (btn) return { x: btn.x + PLAY_BTN_W / 2, y: btn.y + PLAY_BTN_H / 2 };
@@ -460,7 +491,7 @@ function drawCursorX(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.strokeStyle = "rgb(248, 113, 113)";
   ctx.lineWidth = 3;
   ctx.lineCap = "round";
-  const r = 9;
+  const r = 8;
   ctx.beginPath();
   ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r);
   ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r);
@@ -473,12 +504,24 @@ function renderGuiFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: 
   const s = replayState(actions, idx);
   const bg = instance.bg_color ?? 0.17;
 
+  // Outer page background (pure black, matches task page)
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, PLAY_GUI_W, PLAY_GUI_H);
 
-  // Render dots into an offscreen canvas at PLAY_DOT_PX (== CANVAS_PX, so the
-  // existing paintGaussians / drawMarkers* helpers work without modification),
-  // then composite onto the main GUI canvas at (PLAY_PAD, PLAY_PAD).
+  // main-area panel: bg-panel rounded with border
+  ctx.fillStyle = "#14151a";
+  roundedRect(ctx, PLAY_PANEL_X, PLAY_PANEL_Y, PLAY_PANEL_W, PLAY_PANEL_H, PLAY_PANEL_RADIUS);
+  ctx.fill();
+  ctx.strokeStyle = "#2a2b33";
+  ctx.lineWidth = 1;
+  roundedRect(ctx, PLAY_PANEL_X + 0.5, PLAY_PANEL_Y + 0.5, PLAY_PANEL_W - 1, PLAY_PANEL_H - 1, PLAY_PANEL_RADIUS);
+  ctx.stroke();
+
+  // canvas-wrapper: rounded black region the dot canvas sits inside
+  ctx.save();
+  roundedRect(ctx, PLAY_CANVAS_X, PLAY_CANVAS_Y, PLAY_DOT_PX, PLAY_DOT_PX, PLAY_CANVAS_RADIUS);
+  ctx.clip();
+  // Render dots into offscreen at PLAY_DOT_PX so the rendering math is exact.
   const off = document.createElement("canvas");
   off.width = PLAY_DOT_PX;
   off.height = PLAY_DOT_PX;
@@ -486,30 +529,65 @@ function renderGuiFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: 
   if (offCtx) {
     if (s.mip) {
       paintGaussians(offCtx, instance, PLAY_DOT_PX, bg, 0, 1, true);
-      drawMarkersMIP(offCtx, s.markers, bg);
+      drawMarkersMIP(offCtx, s.markers, bg, PLAY_DOT_PX);
     } else {
       paintGaussians(offCtx, instance, PLAY_DOT_PX, bg, s.z / NUM_SLICES, (s.z + 1) / NUM_SLICES, false);
-      drawMarkersSlice(offCtx, s.markers, s.z, bg);
+      drawMarkersSlice(offCtx, s.markers, s.z, bg, PLAY_DOT_PX);
     }
-    ctx.drawImage(off, PLAY_PAD, PLAY_PAD);
+    ctx.drawImage(off, PLAY_CANVAS_X, PLAY_CANVAS_Y);
   }
+  ctx.restore();
 
-  // Buttons
-  ctx.font = "600 13px Inter, system-ui, sans-serif";
+  // Buttons (match task_000.html styling: 2px border, monospace, rounded 6px)
+  ctx.font = "600 12px ui-monospace, 'JetBrains Mono', monospace";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (const b of PLAY_BTNS) {
-    const mipActive = b.id === "mip" && s.mip;
-    ctx.fillStyle = mipActive || b.id === "done" ? b.color : "#14151a";
-    ctx.fillRect(b.x, b.y, PLAY_BTN_W, PLAY_BTN_H);
-    ctx.strokeStyle = b.color;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(b.x, b.y, PLAY_BTN_W, PLAY_BTN_H);
-    ctx.fillStyle = mipActive || b.id === "done" ? "#0a0a0c" : b.color;
+    const isMipActive = b.id === "mip" && s.mip;
+    let fillCol: string, textCol: string, borderCol: string;
+    if (isMipActive) {
+      fillCol = "#f87171"; textCol = "#000"; borderCol = "#f87171"; // MIP active = red bg + dark text
+    } else if (b.filled) {
+      fillCol = b.color; textCol = "#000"; borderCol = b.color;     // Done = cyan bg
+    } else {
+      fillCol = "#14151a"; textCol = b.color; borderCol = b.color;  // outlined buttons
+    }
+    ctx.fillStyle = fillCol;
+    roundedRect(ctx, b.x, b.y, PLAY_BTN_W, PLAY_BTN_H, 5);
+    ctx.fill();
+    ctx.strokeStyle = borderCol;
+    ctx.lineWidth = 2;
+    roundedRect(ctx, b.x + 1, b.y + 1, PLAY_BTN_W - 2, PLAY_BTN_H - 2, 5);
+    ctx.stroke();
+    ctx.fillStyle = textCol;
     ctx.fillText(b.label, b.x + PLAY_BTN_W / 2, b.y + PLAY_BTN_H / 2);
   }
 
-  // Red X cursor at the current action's click position
+  // Status bar (bg-panel, border, rounded)
+  ctx.fillStyle = "#14151a";
+  roundedRect(ctx, PLAY_OUTER_PAD, PLAY_STATUS_Y, PLAY_PANEL_W, PLAY_STATUS_H, 6);
+  ctx.fill();
+  ctx.strokeStyle = "#2a2b33";
+  ctx.lineWidth = 1;
+  roundedRect(ctx, PLAY_OUTER_PAD + 0.5, PLAY_STATUS_Y + 0.5, PLAY_PANEL_W - 1, PLAY_STATUS_H - 1, 6);
+  ctx.stroke();
+  ctx.font = "500 11px ui-monospace, 'JetBrains Mono', monospace";
+  ctx.fillStyle = "#8b8d97";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  const statusMidY = PLAY_STATUS_Y + PLAY_STATUS_H / 2;
+  ctx.fillText("Z: ", PLAY_OUTER_PAD + 12, statusMidY);
+  ctx.fillStyle = "#e8e9ed";
+  ctx.fillText(String(s.z), PLAY_OUTER_PAD + 28, statusMidY);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#e8e9ed";
+  ctx.fillText(String(s.markers.length), PLAY_OUTER_PAD + PLAY_PANEL_W - 12, statusMidY);
+  ctx.fillStyle = "#8b8d97";
+  const pointsLabel = "Points: ";
+  const ptsW = ctx.measureText(String(s.markers.length)).width;
+  ctx.fillText(pointsLabel, PLAY_OUTER_PAD + PLAY_PANEL_W - 12 - ptsW - 4, statusMidY);
+
+  // Red X cursor at the current action's click position (drawn last, on top)
   if (idx >= 0 && idx < actions.length) {
     const pos = cursorPosForAction(actions[idx]);
     if (pos) drawCursorX(ctx, pos.x, pos.y);

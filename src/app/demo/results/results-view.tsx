@@ -62,17 +62,17 @@ export function ResultsView({ cohort, model, frontier, instance, you }: Props) {
       <div className={styles.compareGrid}>
         <div className={`${styles.compareCell} ${isYou ? styles.compareCellYou : ""}`}>
           <div className={styles.cellLabel}>{youLabel}</div>
-          <canvas className={styles.playCanvas} id="cmp-you" width="360" height="240" />
+          <canvas className={styles.playCanvas} id="cmp-you" width="380" height="280" />
           <div className={styles.cellStatus} id="cmp-you-status">&nbsp;</div>
         </div>
         <div className={`${styles.compareCell} ${styles.compareCellModel}`}>
           <div className={styles.cellLabel}>Our model</div>
-          <canvas className={styles.playCanvas} id="cmp-model" width="360" height="240" />
+          <canvas className={styles.playCanvas} id="cmp-model" width="380" height="280" />
           <div className={styles.cellStatus} id="cmp-model-status">&nbsp;</div>
         </div>
         <div className={`${styles.compareCell} ${styles.compareCellFrontier}`}>
-          <div className={styles.cellLabel}>Frontier VLM</div>
-          <canvas className={styles.playCanvas} id="cmp-frontier" width="360" height="240" />
+          <div className={styles.cellLabel}>Gemini 2.5 Pro</div>
+          <canvas className={styles.playCanvas} id="cmp-frontier" width="380" height="280" />
           <div className={styles.cellStatus} id="cmp-frontier-status">&nbsp;</div>
         </div>
       </div>
