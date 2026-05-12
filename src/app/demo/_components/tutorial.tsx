@@ -8,7 +8,7 @@ import {
   drawMarkersMIP,
   type TaskInstance,
 } from "@/lib/render-results";
-import instanceJson from "@/data/task_001_instance.json";
+import instanceJson from "@/data/task_022_instance.json";
 import styles from "./tutorial.module.css";
 
 const INSTANCE = instanceJson as unknown as TaskInstance;
@@ -139,7 +139,7 @@ function PageMIP() {
     <>
       <h2 className={styles.title}>MIP View</h2>
       <p className={styles.body}>
-        <b>MIP</b> (Max Intensity Projection) can be toggled on and off, and shows every dot collapsed onto one image. You can&apos;t place markers while it&apos;s on.
+        <b>MIP</b>{" "}(Max Intensity Projection) can be toggled on and off, and shows every dot collapsed onto one image. You can&apos;t place markers while it&apos;s on.
       </p>
       <div className={styles.visualWrap}>
         <div className={styles.visualCol}>
@@ -180,19 +180,30 @@ const NAV_FRAMES: Frame[] = [
   { d: 1200, z: 4, mip: false, markers: [], cursor: "minusZ" },
 ];
 
+// Real task_022 dot positions visible at z=5:
+//   (0.520, 0.519) at z=4   (faintly visible at z=5)
+//   (0.507, 0.589) at z=5
+//   (0.500, 0.669) at z=5
+const WRONG_SPOT: [number, number] = [0.85, 0.15]; // empty top-right
+const RIGHT_SPOT: [number, number] = [0.500, 0.669]; // actual z=5 dot
+
 const UNDO_FRAMES: Frame[] = [
-  { d: 900, z: 5, mip: false, markers: [], cursor: { canvas: [0.32, 0.28] } },
-  { d: 900, z: 5, mip: false, markers: [[0.32, 0.28, 5]], cursor: "undo" },
-  { d: 900, z: 5, mip: false, markers: [], cursor: { canvas: [0.52, 0.46] } },
-  { d: 1100, z: 5, mip: false, markers: [[0.52, 0.46, 5]], cursor: null },
+  { d: 1000, z: 5, mip: false, markers: [], cursor: { canvas: WRONG_SPOT } },
+  { d: 1000, z: 5, mip: false, markers: [[...WRONG_SPOT, 5]], cursor: "undo" },
+  { d: 1000, z: 5, mip: false, markers: [], cursor: { canvas: RIGHT_SPOT } },
+  { d: 1300, z: 5, mip: false, markers: [[...RIGHT_SPOT, 5]], cursor: null },
 ];
 
+const DOT_A: [number, number] = [0.520, 0.519];
+const DOT_B: [number, number] = [0.507, 0.589];
+const DOT_C: [number, number] = [0.500, 0.669];
+
 const DONE_FRAMES: Frame[] = [
-  { d: 700, z: 5, mip: false, markers: [], cursor: { canvas: [0.28, 0.34] } },
-  { d: 600, z: 5, mip: false, markers: [[0.28, 0.34, 5]], cursor: { canvas: [0.48, 0.42] } },
-  { d: 600, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5]], cursor: { canvas: [0.62, 0.6] } },
-  { d: 800, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5], [0.62, 0.6, 5]], cursor: "done" },
-  { d: 1200, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5], [0.62, 0.6, 5]], cursor: null },
+  { d: 700, z: 5, mip: false, markers: [], cursor: { canvas: DOT_A } },
+  { d: 600, z: 5, mip: false, markers: [[...DOT_A, 5]], cursor: { canvas: DOT_B } },
+  { d: 600, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5]], cursor: { canvas: DOT_C } },
+  { d: 800, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5], [...DOT_C, 5]], cursor: "done" },
+  { d: 1200, z: 5, mip: false, markers: [[...DOT_A, 5], [...DOT_B, 5], [...DOT_C, 5]], cursor: null },
 ];
 
 function MockTaskCanvas({ frames }: { frames: Frame[] }) {
