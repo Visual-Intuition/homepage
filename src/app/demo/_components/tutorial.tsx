@@ -13,15 +13,16 @@ import styles from "./tutorial.module.css";
 
 const INSTANCE = instanceJson as unknown as TaskInstance;
 const CANVAS = 224;
+const NUM_PAGES = 5;
 
 type Props = {
   open: boolean;
-  onClose: () => void; // dismiss tutorial entirely (skip to task)
+  onClose: () => void; // skip tutorial entirely, go to task
   onBegin: () => void; // finished tutorial, start task
 };
 
 export function Tutorial({ open, onClose, onBegin }: Props) {
-  const [page, setPage] = useState(0); // 0, 1, 2
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     if (open) setPage(0);
@@ -29,7 +30,7 @@ export function Tutorial({ open, onClose, onBegin }: Props) {
 
   if (!open) return null;
 
-  const isLast = page === 2;
+  const isLast = page === NUM_PAGES - 1;
   const isFirst = page === 0;
 
   return (
@@ -50,51 +51,40 @@ export function Tutorial({ open, onClose, onBegin }: Props) {
           </button>
 
           <div className={styles.content}>
-            {page === 0 && <Page1 />}
-            {page === 1 && <Page2 />}
-            {page === 2 && <Page3 onBegin={onBegin} />}
+            {page === 0 && <PageOverview />}
+            {page === 1 && <PageMIP />}
+            {page === 2 && <PageNavigation />}
+            {page === 3 && <PageUndo />}
+            {page === 4 && <PageDone onBegin={onBegin} />}
           </div>
 
           <button
             className={styles.arrow}
             disabled={isLast}
-            onClick={() => setPage((p) => Math.min(2, p + 1))}
+            onClick={() => setPage((p) => Math.min(NUM_PAGES - 1, p + 1))}
             aria-label="Next"
           >
             →
           </button>
         </div>
 
-        <div className={styles.indicator}>{page + 1} / 3</div>
+        <div className={styles.indicator}>
+          {page + 1} / {NUM_PAGES}
+        </div>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// Page 1: task overview + MIP
+// Page 1: task overview
 // ============================================================
 
-function Page1() {
-  const mipCanvas = useRef<HTMLCanvasElement>(null);
+function PageOverview() {
   const sliceCanvas = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const bg = INSTANCE.bg_color ?? 0.17;
-
-    if (mipCanvas.current) {
-      const ctx = mipCanvas.current.getContext("2d");
-      if (ctx) {
-        paintGaussians(ctx, INSTANCE, CANVAS, bg, 0, 1, true);
-        const markers = INSTANCE.points.map<[number, number, number]>((p) => [
-          p.x,
-          p.y,
-          p.z * NUM_SLICES - 0.5,
-        ]);
-        drawMarkersMIP(ctx, markers, bg);
-      }
-    }
-
     if (sliceCanvas.current) {
       const ctx = sliceCanvas.current.getContext("2d");
       if (ctx) {
@@ -108,19 +98,12 @@ function Page1() {
     <>
       <h2 className={styles.title}>Colored Dot Tracking</h2>
       <p className={styles.body}>
-        Each colored blob is a Gaussian with a single peak, so click the <b>center</b> of each dot in <b>spectrum order</b>, from blue to red. The dots are scattered through a 3D volume across 16 z-slices, so you&apos;ll need to navigate depth to find them.
-        <br />
-        <br />
-        <b>MIP</b> (Max Intensity Projection) shows every dot collapsed onto one image, useful to see the full path at a glance. You can&apos;t place markers while it&apos;s on.
+        Click the <b>center</b> of each colored dot in <b>spectrum order</b>, from blue to red. The dots are scattered through a 3D volume across several z-slices, so you&apos;ll need to navigate depth to find them.
       </p>
       <div className={styles.visualWrap}>
         <div className={styles.visualCol}>
-          <canvas ref={mipCanvas} className={styles.canvas} width={CANVAS} height={CANVAS} />
-          <div className={styles.visualLabel}>MIP view (all dots, finished)</div>
-        </div>
-        <div className={styles.visualCol}>
           <canvas ref={sliceCanvas} className={styles.canvas} width={CANVAS} height={CANVAS} />
-          <div className={styles.visualLabel}>Single z-slice</div>
+          <div className={styles.visualLabel}>One z-slice</div>
         </div>
       </div>
     </>
@@ -128,11 +111,56 @@ function Page1() {
 }
 
 // ============================================================
-// Page 2: navigation
+// Page 2: MIP
+// ============================================================
+
+function PageMIP() {
+  const mipCanvas = useRef<HTMLCanvasElement>(null);
+  const sliceCanvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const bg = INSTANCE.bg_color ?? 0.17;
+    if (sliceCanvas.current) {
+      const ctx = sliceCanvas.current.getContext("2d");
+      if (ctx) {
+        const z = 7;
+        paintGaussians(ctx, INSTANCE, CANVAS, bg, z / NUM_SLICES, (z + 1) / NUM_SLICES, false);
+      }
+    }
+    if (mipCanvas.current) {
+      const ctx = mipCanvas.current.getContext("2d");
+      if (ctx) {
+        paintGaussians(ctx, INSTANCE, CANVAS, bg, 0, 1, true);
+      }
+    }
+  }, []);
+
+  return (
+    <>
+      <h2 className={styles.title}>MIP View</h2>
+      <p className={styles.body}>
+        <b>MIP</b> (Max Intensity Projection) can be toggled on and off, and shows every dot collapsed onto one image. You can&apos;t place markers while it&apos;s on.
+      </p>
+      <div className={styles.visualWrap}>
+        <div className={styles.visualCol}>
+          <canvas ref={sliceCanvas} className={styles.canvas} width={CANVAS} height={CANVAS} />
+          <div className={styles.visualLabel}>Single z-slice</div>
+        </div>
+        <div className={styles.visualCol}>
+          <canvas ref={mipCanvas} className={styles.canvas} width={CANVAS} height={CANVAS} />
+          <div className={styles.visualLabel}>MIP (all slices)</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ============================================================
+// Shared animation engine for pages 3-5
 // ============================================================
 
 type Frame = {
-  d: number; // ms duration
+  d: number;
   z: number;
   mip: boolean;
   markers: [number, number, number][];
@@ -156,8 +184,15 @@ const UNDO_FRAMES: Frame[] = [
   { d: 900, z: 5, mip: false, markers: [], cursor: { canvas: [0.32, 0.28] } },
   { d: 900, z: 5, mip: false, markers: [[0.32, 0.28, 5]], cursor: "undo" },
   { d: 900, z: 5, mip: false, markers: [], cursor: { canvas: [0.52, 0.46] } },
-  { d: 900, z: 5, mip: false, markers: [[0.52, 0.46, 5]], cursor: "done" },
-  { d: 1400, z: 5, mip: false, markers: [[0.52, 0.46, 5]], cursor: null },
+  { d: 1100, z: 5, mip: false, markers: [[0.52, 0.46, 5]], cursor: null },
+];
+
+const DONE_FRAMES: Frame[] = [
+  { d: 700, z: 5, mip: false, markers: [], cursor: { canvas: [0.28, 0.34] } },
+  { d: 600, z: 5, mip: false, markers: [[0.28, 0.34, 5]], cursor: { canvas: [0.48, 0.42] } },
+  { d: 600, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5]], cursor: { canvas: [0.62, 0.6] } },
+  { d: 800, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5], [0.62, 0.6, 5]], cursor: "done" },
+  { d: 1200, z: 5, mip: false, markers: [[0.28, 0.34, 5], [0.48, 0.42, 5], [0.62, 0.6, 5]], cursor: null },
 ];
 
 function MockTaskCanvas({ frames }: { frames: Frame[] }) {
@@ -192,7 +227,6 @@ function MockTaskCanvas({ frames }: { frames: Frame[] }) {
         acc += f.d;
       }
 
-      // Render canvas state
       const ctx = canvasRef.current?.getContext("2d");
       if (ctx) {
         const bg = INSTANCE.bg_color ?? 0.17;
@@ -205,7 +239,6 @@ function MockTaskCanvas({ frames }: { frames: Frame[] }) {
         }
       }
 
-      // Position cursor
       const container = containerRef.current;
       const cursor = cursorRef.current;
       if (container && cursor) {
@@ -267,7 +300,7 @@ function MockTaskCanvas({ frames }: { frames: Frame[] }) {
   );
 }
 
-function Page2() {
+function PageNavigation() {
   return (
     <>
       <h2 className={styles.title}>Navigate the Volume</h2>
@@ -279,14 +312,26 @@ function Page2() {
   );
 }
 
-function Page3({ onBegin }: { onBegin: () => void }) {
+function PageUndo() {
   return (
     <>
-      <h2 className={styles.title}>Fix Mistakes, Then Finish</h2>
+      <h2 className={styles.title}>Undo Mistakes</h2>
       <p className={styles.body}>
-        Misplaced a marker? Click <b>Undo</b> to remove the most recent one. When you&apos;ve placed every dot, click <b>Done</b> to submit.
+        Misplaced a marker? Click <b>Undo</b> to remove the most recent one and try again.
       </p>
       <MockTaskCanvas frames={UNDO_FRAMES} />
+    </>
+  );
+}
+
+function PageDone({ onBegin }: { onBegin: () => void }) {
+  return (
+    <>
+      <h2 className={styles.title}>Finish the Task</h2>
+      <p className={styles.body}>
+        When you&apos;ve placed every dot, click <b>Done</b> to submit your annotation.
+      </p>
+      <MockTaskCanvas frames={DONE_FRAMES} />
       <div style={{ marginTop: 20 }}>
         <button className={styles.beginBtn} onClick={onBegin}>
           Begin Task
