@@ -796,7 +796,20 @@ export function renderResults(opts: RenderResultsOpts): () => void {
     y: p.y,
     z_slice: p.z * NUM_SLICES - 0.5,
   }));
-  const computed = allNorm.map((n) => computeAll(n, gt));
+
+  // DIAGNOSTIC: per-annotator timed computeAll. The last console line before
+  // the browser freezes identifies the offender.
+  const computed: Computed[] = [];
+  for (let i = 0; i < allNorm.length; i++) {
+    const n = allNorm[i];
+    const markersHint = n.finalMarkers?.length ?? "?";
+    const actionsHint = n.actions?.length ?? "?";
+    console.log(`[diag] ${i + 1}/${allNorm.length} computing ${n.id} (markers=${markersHint} actions=${actionsHint})`);
+    const t0 = performance.now();
+    const c = computeAll(n, gt);
+    console.log(`[diag]   ${n.id} done in ${(performance.now() - t0).toFixed(1)}ms`);
+    computed.push(c);
+  }
   const modelComp = computed.find((c) => c.isModel) ?? null;
 
   if (DIAGNOSTIC_STAGE === 1) {
