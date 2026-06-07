@@ -133,14 +133,24 @@ function hungarian(cost: number[][]): number[] {
   const v = new Array(size + 1).fill(0);
   const p = new Array(size + 1).fill(0);
   const way = new Array(size + 1).fill(0);
+  const MAX_INNER = Math.max(64, size * 4);
   for (let i = 1; i <= size; i++) {
     p[0] = i;
     let j0 = 0;
     const minv = new Array(size + 1).fill(BIG);
     const used = new Array(size + 1).fill(false);
+    let guard = 0;
     do {
+      if (++guard > MAX_INNER) {
+        console.warn(`[hungarian] inner loop exceeded ${MAX_INNER} iters at i=${i}; bailing`);
+        return new Array(n).fill(-1);
+      }
       used[j0] = true;
       const i0 = p[j0];
+      if (i0 < 1 || i0 > size) {
+        console.warn(`[hungarian] bad i0=${i0} at i=${i}; bailing`);
+        return new Array(n).fill(-1);
+      }
       let delta = Infinity;
       let j1 = -1;
       for (let j = 1; j <= size; j++) {
@@ -155,6 +165,10 @@ function hungarian(cost: number[][]): number[] {
           j1 = j;
         }
       }
+      if (j1 < 0) {
+        console.warn(`[hungarian] no j1 found at i=${i}; bailing`);
+        return new Array(n).fill(-1);
+      }
       for (let j = 0; j <= size; j++) {
         if (used[j]) {
           u[p[j]] += delta;
@@ -165,7 +179,12 @@ function hungarian(cost: number[][]): number[] {
       }
       j0 = j1;
     } while (p[j0] !== 0);
+    let walkGuard = 0;
     do {
+      if (++walkGuard > size + 4) {
+        console.warn(`[hungarian] walk loop bailing at i=${i}`);
+        return new Array(n).fill(-1);
+      }
       const j1 = way[j0];
       p[j0] = p[j1];
       j0 = j1;
@@ -797,24 +816,40 @@ export function renderResults(opts: RenderResultsOpts): () => void {
     z_slice: p.z * NUM_SLICES - 0.5,
   }));
 
-  // DIAGNOSTIC: per-annotator timed computeAll. The last console line before
-  // the browser freezes identifies the offender.
+  // DIAGNOSTIC: chunk per-annotator computeAll with setTimeout so the browser
+  // stays responsive (so console can be opened). Logs the in-flight annotator
+  // before each computeAll; the last `computing ...` line without a matching
+  // `done` is the offender.
+  let cancelled = false;
+  let i = 0;
   const computed: Computed[] = [];
-  for (let i = 0; i < allNorm.length; i++) {
-    const n = allNorm[i];
-    const markersHint = n.finalMarkers?.length ?? "?";
-    const actionsHint = n.actions?.length ?? "?";
-    console.log(`[diag] ${i + 1}/${allNorm.length} computing ${n.id} (markers=${markersHint} actions=${actionsHint})`);
-    const t0 = performance.now();
-    const c = computeAll(n, gt);
-    console.log(`[diag]   ${n.id} done in ${(performance.now() - t0).toFixed(1)}ms`);
-    computed.push(c);
+  let modelComp: Computed | null = null;
+
+  function step() {
+    if (cancelled) return;
+    const chunkStart = performance.now();
+    while (i < allNorm.length && performance.now() - chunkStart < 30) {
+      const n = allNorm[i];
+      const markersHint = n.finalMarkers?.length ?? "?";
+      const actionsHint = n.actions?.length ?? "?";
+      console.log(`[diag] ${i + 1}/${allNorm.length} computing ${n.id} (markers=${markersHint} actions=${actionsHint})`);
+      const t0 = performance.now();
+      const c = computeAll(n, gt);
+      console.log(`[diag]   ${n.id} done in ${(performance.now() - t0).toFixed(1)}ms`);
+      computed.push(c);
+      if (c.isModel) modelComp = c;
+      i++;
+    }
+    if (i < allNorm.length) {
+      setTimeout(step, 0);
+    } else {
+      console.log(`[diag] all ${computed.length} done; model =`, modelComp?.id);
+    }
   }
-  const modelComp = computed.find((c) => c.isModel) ?? null;
+  setTimeout(step, 0);
 
   if (DIAGNOSTIC_STAGE === 1) {
-    console.log(`[diag] computed ${computed.length} annotators, model:`, modelComp?.id);
-    return () => undefined;
+    return () => { cancelled = true; };
   }
 
   // Pick playback annotators
