@@ -885,34 +885,28 @@ export function renderResults(opts: RenderResultsOpts): () => void {
   let modelLastIdx = -1;
   let frontierLastIdx = -1;
 
-  function tick(now: number) {
-    if (startTime === null) startTime = now;
-    const elapsed = paused ? pauseAt : now - startTime;
-    const cycle = PLAYBACK_TOTAL_MS + PLAYBACK_PAUSE_MS;
-    const local = elapsed % cycle;
-    const frac = Math.min(1, local / PLAYBACK_TOTAL_MS);
-    const tickPanel = (
-      canvas: HTMLCanvasElement | null,
-      statusEl: Element | null,
-      actions: ClickAction[],
-      lastIdx: number,
-    ): number => {
-      if (!canvas || actions.length === 0) return lastIdx;
-      const idx = Math.min(actions.length - 1, Math.floor(frac * actions.length));
-      if (idx === lastIdx) return idx;
-      renderGuiFrame(canvas, actions, idx, instance);
-      if (statusEl) statusEl.textContent = `${idx + 1} / ${actions.length}`;
-      return idx;
-    };
-    youLastIdx = tickPanel(youCanvas, youStatus, youActions, youLastIdx);
-    modelLastIdx = tickPanel(modelCanvas, modelStatus, modelActions, modelLastIdx);
-    frontierLastIdx = tickPanel(frontierCanvas, frontierStatus, frontierActions, frontierLastIdx);
-    if (fill) fill.style.width = `${frac * 100}%`;
-    if (timeEl) {
-      timeEl.textContent = `${(local / 1000).toFixed(1)}s / ${(PLAYBACK_TOTAL_MS / 1000).toFixed(1)}s`;
-    }
+  // DIAGNOSTIC: render the first frame of each panel statically, no rAF loop.
+  // If the freeze persists with this, the playback engine isn't the cause and
+  // we need to look at Plotly init, hydration, or something else.
+  const renderStaticFirstFrame = (
+    canvas: HTMLCanvasElement | null,
+    statusEl: Element | null,
+    actions: ClickAction[],
+  ) => {
+    if (!canvas || actions.length === 0) return;
+    renderGuiFrame(canvas, actions, 0, instance);
+    if (statusEl) statusEl.textContent = `1 / ${actions.length}`;
+  };
+  renderStaticFirstFrame(youCanvas, youStatus, youActions);
+  renderStaticFirstFrame(modelCanvas, modelStatus, modelActions);
+  renderStaticFirstFrame(frontierCanvas, frontierStatus, frontierActions);
+  // Hint we used to start the rAF loop here; intentionally disabled for now.
+  void youLastIdx; void modelLastIdx; void frontierLastIdx;
+
+  function tick(_now: number) {
     rafId = requestAnimationFrame(tick);
   }
+  // rafId = requestAnimationFrame(tick); // intentionally not started
   rafId = requestAnimationFrame(tick);
 
   function onPauseClick() {
