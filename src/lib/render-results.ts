@@ -780,7 +780,13 @@ function renderMetricHist(
   window.Plotly?.react(opts.divId, traces, layout, { responsive: true, displayModeBar: false });
 }
 
+const DIAGNOSTIC_DISABLE_RENDER = true;
+
 export function renderResults(opts: RenderResultsOpts): () => void {
+  if (DIAGNOSTIC_DISABLE_RENDER) {
+    void opts;
+    return () => undefined;
+  }
   const { container, cohort, model, instance, you } = opts;
   if (!window.Plotly) return () => undefined;
 
