@@ -45,7 +45,7 @@ Next.js app in `src/`.
 - `src/app/demo/results/[id]/page.tsx` — per-submission view (submitter highlighted as "YOU")
 - `src/app/demo/results/results-view.tsx` — shared client component with playback canvases and Plotly histogram divs
 - `src/app/demo/results/load-data.ts` — server-side cohort fetch + static (model, frontier, instance) imports
-- `src/lib/render-results.ts` — vanilla TS engine: Hungarian matching, accuracy score, histogram rendering, faithful playback GUI with red X cursor
+- `src/lib/render-results.ts` — vanilla TS engine: greedy 1-to-1 marker↔GT matching, accuracy score, histogram rendering, faithful playback GUI with red X cursor
 
 ### API + storage
 - `src/app/api/submit/route.ts` — POST endpoint, validates and inserts into Supabase
@@ -70,6 +70,7 @@ Next.js app in `src/`.
 - **No auth, no rate-limit yet.** Identity is a localStorage UUID. Every submission creates a new row; viewing results requires the row UUID in the URL (random, unguessable)
 - **Continuous Accuracy Score** (per-dot multiplicative xy × z precision) replaces F1, which saturated and hid all variation
 - **Playback GUI is rendered, not screenshotted**, so we can show the red X cursor at each click and play traces at synced wall-clock pace
+- **Greedy matching, not Hungarian**, for marker↔GT assignment. Hungarian's primal-dual updates accumulated floating-point precision noise on degenerate inputs (e.g. all markers at the same z) and looped forever. Greedy is provably finite and gives identical assignments on well-separated cost matrices.
 - **Frontier VLM is a save-once-and-commit artifact**, not a live API call per visit, to keep cost zero and result reproducible
 
 ## Constraints
