@@ -501,6 +501,19 @@ function drawCursorX(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.stroke();
 }
 
+// One shared offscreen canvas reused across all panels and frames.
+// Creating a fresh canvas per tick (3 panels × 60fps) was allocating ~40MB/s
+// of pixel buffers and freezing the browser.
+let SHARED_OFFSCREEN: HTMLCanvasElement | null = null;
+function getOffscreen(): HTMLCanvasElement {
+  if (!SHARED_OFFSCREEN) {
+    SHARED_OFFSCREEN = document.createElement("canvas");
+    SHARED_OFFSCREEN.width = PLAY_DOT_PX;
+    SHARED_OFFSCREEN.height = PLAY_DOT_PX;
+  }
+  return SHARED_OFFSCREEN;
+}
+
 function renderGuiFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: number, instance: TaskInstance) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return { z: 0, mip: false, markers: [] };
@@ -524,10 +537,8 @@ function renderGuiFrame(canvas: HTMLCanvasElement, actions: ClickAction[], idx: 
   ctx.save();
   roundedRect(ctx, PLAY_CANVAS_X, PLAY_CANVAS_Y, PLAY_DOT_PX, PLAY_DOT_PX, PLAY_CANVAS_RADIUS);
   ctx.clip();
-  // Render dots into offscreen at PLAY_DOT_PX so the rendering math is exact.
-  const off = document.createElement("canvas");
-  off.width = PLAY_DOT_PX;
-  off.height = PLAY_DOT_PX;
+  // Render dots into shared offscreen at PLAY_DOT_PX, then composite.
+  const off = getOffscreen();
   const offCtx = off.getContext("2d");
   if (offCtx) {
     if (s.mip) {
