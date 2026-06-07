@@ -198,6 +198,33 @@ function hungarian(cost: number[][]): number[] {
   return assignment;
 }
 
+// Greedy 1-to-1 matching: repeatedly pick the smallest cost cell, lock its
+// marker and GT, repeat. O(N*M*min(N,M)) but for our scale (≤30 each) that's
+// microseconds. The paper's Hungarian gives identical results on well-behaved
+// data; on degenerate inputs (e.g. all markers at the same z, our 345abf5e...
+// submission) Hungarian was looping forever on floating-point precision noise.
+function greedyMatch(cost: number[][]): number[] {
+  const n = cost.length;
+  const m = cost[0]?.length ?? 0;
+  const assignment = new Array(n).fill(-1);
+  const gtUsed = new Set<number>();
+  for (let step = 0; step < Math.min(n, m); step++) {
+    let bestI = -1, bestJ = -1, bestC = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (assignment[i] !== -1) continue;
+      for (let j = 0; j < m; j++) {
+        if (gtUsed.has(j)) continue;
+        const c = cost[i][j];
+        if (c < bestC) { bestC = c; bestI = i; bestJ = j; }
+      }
+    }
+    if (bestI < 0) break;
+    assignment[bestI] = bestJ;
+    gtUsed.add(bestJ);
+  }
+  return assignment;
+}
+
 function pairwiseErrors(markers: [number, number, number][], gt: { x: number; y: number; z_slice: number }[]) {
   if (markers.length === 0) return [];
   const cost = markers.map((m) =>
@@ -208,7 +235,7 @@ function pairwiseErrors(markers: [number, number, number][], gt: { x: number; y:
       return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }),
   );
-  const assignment = hungarian(cost);
+  const assignment = greedyMatch(cost);
   const out: { predIdx: number; gtIdx: number; xyDist: number; zDist: number; matched: boolean }[] = [];
   markers.forEach((m, i) => {
     const j = assignment[i];
@@ -799,11 +826,7 @@ function renderMetricHist(
   window.Plotly?.react(opts.divId, traces, layout, { responsive: true, displayModeBar: false });
 }
 
-// DIAGNOSTIC stages. 0 = noop. 1 = build computed only. 2 = +plotly. 3 = +playback.
-const DIAGNOSTIC_STAGE: number = 1;
-
 export function renderResults(opts: RenderResultsOpts): () => void {
-  if (DIAGNOSTIC_STAGE === 0) { void opts; return () => undefined; }
   const { container, cohort, model, instance, you } = opts;
   if (!window.Plotly) return () => undefined;
 
@@ -815,42 +838,8 @@ export function renderResults(opts: RenderResultsOpts): () => void {
     y: p.y,
     z_slice: p.z * NUM_SLICES - 0.5,
   }));
-
-  // DIAGNOSTIC: chunk per-annotator computeAll with setTimeout so the browser
-  // stays responsive (so console can be opened). Logs the in-flight annotator
-  // before each computeAll; the last `computing ...` line without a matching
-  // `done` is the offender.
-  let cancelled = false;
-  let i = 0;
-  const computed: Computed[] = [];
-  let modelComp: Computed | null = null;
-
-  function step() {
-    if (cancelled) return;
-    const chunkStart = performance.now();
-    while (i < allNorm.length && performance.now() - chunkStart < 30) {
-      const n = allNorm[i];
-      const markersHint = n.finalMarkers?.length ?? "?";
-      const actionsHint = n.actions?.length ?? "?";
-      console.log(`[diag] ${i + 1}/${allNorm.length} computing ${n.id} (markers=${markersHint} actions=${actionsHint})`);
-      const t0 = performance.now();
-      const c = computeAll(n, gt);
-      console.log(`[diag]   ${n.id} done in ${(performance.now() - t0).toFixed(1)}ms`);
-      computed.push(c);
-      if (c.isModel) modelComp = c;
-      i++;
-    }
-    if (i < allNorm.length) {
-      setTimeout(step, 0);
-    } else {
-      console.log(`[diag] all ${computed.length} done; model =`, modelComp?.id);
-    }
-  }
-  setTimeout(step, 0);
-
-  if (DIAGNOSTIC_STAGE === 1) {
-    return () => { cancelled = true; };
-  }
+  const computed = allNorm.map((n) => computeAll(n, gt));
+  const modelComp = computed.find((c) => c.isModel) ?? null;
 
   // Pick playback annotators
   const youComp = you ? computed.find((c) => c.id === you.id) : null;
@@ -942,28 +931,34 @@ export function renderResults(opts: RenderResultsOpts): () => void {
   let modelLastIdx = -1;
   let frontierLastIdx = -1;
 
-  // DIAGNOSTIC: render the first frame of each panel statically, no rAF loop.
-  // If the freeze persists with this, the playback engine isn't the cause and
-  // we need to look at Plotly init, hydration, or something else.
-  const renderStaticFirstFrame = (
-    canvas: HTMLCanvasElement | null,
-    statusEl: Element | null,
-    actions: ClickAction[],
-  ) => {
-    if (!canvas || actions.length === 0) return;
-    renderGuiFrame(canvas, actions, 0, instance);
-    if (statusEl) statusEl.textContent = `1 / ${actions.length}`;
-  };
-  renderStaticFirstFrame(youCanvas, youStatus, youActions);
-  renderStaticFirstFrame(modelCanvas, modelStatus, modelActions);
-  renderStaticFirstFrame(frontierCanvas, frontierStatus, frontierActions);
-  // Hint we used to start the rAF loop here; intentionally disabled for now.
-  void youLastIdx; void modelLastIdx; void frontierLastIdx;
-
-  function tick(_now: number) {
+  function tick(now: number) {
+    if (startTime === null) startTime = now;
+    const elapsed = paused ? pauseAt : now - startTime;
+    const cycle = PLAYBACK_TOTAL_MS + PLAYBACK_PAUSE_MS;
+    const local = elapsed % cycle;
+    const frac = Math.min(1, local / PLAYBACK_TOTAL_MS);
+    const tickPanel = (
+      canvas: HTMLCanvasElement | null,
+      statusEl: Element | null,
+      actions: ClickAction[],
+      lastIdx: number,
+    ): number => {
+      if (!canvas || actions.length === 0) return lastIdx;
+      const idx = Math.min(actions.length - 1, Math.floor(frac * actions.length));
+      if (idx === lastIdx) return idx;
+      renderGuiFrame(canvas, actions, idx, instance);
+      if (statusEl) statusEl.textContent = `${idx + 1} / ${actions.length}`;
+      return idx;
+    };
+    youLastIdx = tickPanel(youCanvas, youStatus, youActions, youLastIdx);
+    modelLastIdx = tickPanel(modelCanvas, modelStatus, modelActions, modelLastIdx);
+    frontierLastIdx = tickPanel(frontierCanvas, frontierStatus, frontierActions, frontierLastIdx);
+    if (fill) fill.style.width = `${frac * 100}%`;
+    if (timeEl) {
+      timeEl.textContent = `${(local / 1000).toFixed(1)}s / ${(PLAYBACK_TOTAL_MS / 1000).toFixed(1)}s`;
+    }
     rafId = requestAnimationFrame(tick);
   }
-  // rafId = requestAnimationFrame(tick); // intentionally not started
   rafId = requestAnimationFrame(tick);
 
   function onPauseClick() {
