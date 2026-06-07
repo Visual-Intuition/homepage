@@ -780,13 +780,11 @@ function renderMetricHist(
   window.Plotly?.react(opts.divId, traces, layout, { responsive: true, displayModeBar: false });
 }
 
-const DIAGNOSTIC_DISABLE_RENDER = true;
+// DIAGNOSTIC stages. 0 = noop. 1 = build computed only. 2 = +plotly. 3 = +playback.
+const DIAGNOSTIC_STAGE: number = 1;
 
 export function renderResults(opts: RenderResultsOpts): () => void {
-  if (DIAGNOSTIC_DISABLE_RENDER) {
-    void opts;
-    return () => undefined;
-  }
+  if (DIAGNOSTIC_STAGE === 0) { void opts; return () => undefined; }
   const { container, cohort, model, instance, you } = opts;
   if (!window.Plotly) return () => undefined;
 
@@ -800,6 +798,11 @@ export function renderResults(opts: RenderResultsOpts): () => void {
   }));
   const computed = allNorm.map((n) => computeAll(n, gt));
   const modelComp = computed.find((c) => c.isModel) ?? null;
+
+  if (DIAGNOSTIC_STAGE === 1) {
+    console.log(`[diag] computed ${computed.length} annotators, model:`, modelComp?.id);
+    return () => undefined;
+  }
 
   // Pick playback annotators
   const youComp = you ? computed.find((c) => c.id === you.id) : null;
