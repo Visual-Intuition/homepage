@@ -17,17 +17,33 @@ export async function loadCohortAndStatic(opts: { excludeId?: string }): Promise
   const supabase = getSupabaseAdmin();
   let query = supabase
     .from("submissions")
-    .select("id, annotator_name, submission_data")
-    .eq("task_id", TASK_ID);
+    .select("id, annotator_name, submission_data, created_at")
+    .eq("task_id", TASK_ID)
+    .order("created_at", { ascending: false })
+    .limit(60); // cap raw fetch; further filtered below
   if (opts.excludeId) query = query.neq("id", opts.excludeId);
 
   const { data, error } = await query;
   if (error) throw new Error(`Failed to load cohort: ${error.message}`);
 
-  const cohort: Annotator[] = (data ?? []).map((row) => ({
-    id: row.id,
-    raw: row.submission_data as SubmissionData,
-  }));
+  // Filter to plausible real attempts: between 5 and 20 markers placed, and a
+  // submission shape we recognize. Drops spam-clicks (e.g., 2 actions, 0
+  // markers) and gibberish (35 markers, etc.) that bloat the page and skew
+  // distributions. Cap to 30 to keep the inlined HTML payload manageable.
+  const isReal = (row: { submission_data: unknown }) => {
+    const sd = row.submission_data as SubmissionData | null;
+    if (!sd || !Array.isArray(sd.markers) || !Array.isArray(sd.click_history)) return false;
+    const n = sd.markers.length;
+    return n >= 5 && n <= 20;
+  };
+
+  const cohort: Annotator[] = (data ?? [])
+    .filter(isReal)
+    .slice(0, 30)
+    .map((row) => ({
+      id: row.id,
+      raw: row.submission_data as SubmissionData,
+    }));
 
   const frontierActions = frontierJson as unknown as ModelData["actions"];
   const frontier: ModelData | null = frontierActions.length > 0
