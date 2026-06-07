@@ -877,21 +877,36 @@ export function renderResults(opts: RenderResultsOpts): () => void {
   const modelActions = computed.find((c) => c.isModel)?.actions ?? [];
   const frontierActions = opts.frontier?.actions ?? [];
 
+  // Track last rendered action index per panel so we can skip frames where the
+  // state hasn't changed. paintGaussians allocates a fresh ImageData buffer per
+  // call (~230 KB at 240px), and at 60 fps × 3 panels that's ~40 MB/s of
+  // garbage. Most consecutive frames map to the same idx, so skipping is huge.
+  let youLastIdx = -1;
+  let modelLastIdx = -1;
+  let frontierLastIdx = -1;
+
   function tick(now: number) {
     if (startTime === null) startTime = now;
     const elapsed = paused ? pauseAt : now - startTime;
     const cycle = PLAYBACK_TOTAL_MS + PLAYBACK_PAUSE_MS;
     const local = elapsed % cycle;
     const frac = Math.min(1, local / PLAYBACK_TOTAL_MS);
-    const tickPanel = (canvas: HTMLCanvasElement | null, statusEl: Element | null, actions: ClickAction[]) => {
-      if (!canvas || actions.length === 0) return;
+    const tickPanel = (
+      canvas: HTMLCanvasElement | null,
+      statusEl: Element | null,
+      actions: ClickAction[],
+      lastIdx: number,
+    ): number => {
+      if (!canvas || actions.length === 0) return lastIdx;
       const idx = Math.min(actions.length - 1, Math.floor(frac * actions.length));
+      if (idx === lastIdx) return idx;
       renderGuiFrame(canvas, actions, idx, instance);
       if (statusEl) statusEl.textContent = `${idx + 1} / ${actions.length}`;
+      return idx;
     };
-    tickPanel(youCanvas, youStatus, youActions);
-    tickPanel(modelCanvas, modelStatus, modelActions);
-    tickPanel(frontierCanvas, frontierStatus, frontierActions);
+    youLastIdx = tickPanel(youCanvas, youStatus, youActions, youLastIdx);
+    modelLastIdx = tickPanel(modelCanvas, modelStatus, modelActions, modelLastIdx);
+    frontierLastIdx = tickPanel(frontierCanvas, frontierStatus, frontierActions, frontierLastIdx);
     if (fill) fill.style.width = `${frac * 100}%`;
     if (timeEl) {
       timeEl.textContent = `${(local / 1000).toFixed(1)}s / ${(PLAYBACK_TOTAL_MS / 1000).toFixed(1)}s`;
