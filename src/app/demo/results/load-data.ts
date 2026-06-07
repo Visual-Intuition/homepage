@@ -19,27 +19,20 @@ export async function loadCohortAndStatic(opts: { excludeId?: string }): Promise
     .from("submissions")
     .select("id, annotator_name, submission_data, created_at")
     .eq("task_id", TASK_ID)
-    .order("created_at", { ascending: false })
-    .limit(60); // cap raw fetch; further filtered below
+    .order("created_at", { ascending: false });
   if (opts.excludeId) query = query.neq("id", opts.excludeId);
 
   const { data, error } = await query;
   if (error) throw new Error(`Failed to load cohort: ${error.message}`);
 
-  // Filter to plausible real attempts: between 5 and 20 markers placed, and a
-  // submission shape we recognize. Drops spam-clicks (e.g., 2 actions, 0
-  // markers) and gibberish (35 markers, etc.) that bloat the page and skew
-  // distributions. Cap to 30 to keep the inlined HTML payload manageable.
-  const isReal = (row: { submission_data: unknown }) => {
-    const sd = row.submission_data as SubmissionData | null;
-    if (!sd || !Array.isArray(sd.markers) || !Array.isArray(sd.click_history)) return false;
-    const n = sd.markers.length;
-    return n >= 5 && n <= 20;
-  };
-
+  // Keep only rows whose submission_data has the expected shape so the client
+  // doesn't crash on a null/malformed JSONB column. No filtering by marker
+  // count or quality - tiny submissions are real signal too.
   const cohort: Annotator[] = (data ?? [])
-    .filter(isReal)
-    .slice(0, 30)
+    .filter((row) => {
+      const sd = row.submission_data as SubmissionData | null;
+      return sd != null && Array.isArray(sd.markers) && Array.isArray(sd.click_history);
+    })
     .map((row) => ({
       id: row.id,
       raw: row.submission_data as SubmissionData,
